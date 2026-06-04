@@ -1,0 +1,27 @@
+# dependencies & build output
+node_modules
+.next
+out
+build
+
+# git & editor
+.git
+.gitignore
+.cursor
+.vscode
+
+# env & local db
+.env
+.env.*
+*.db
+*.db-journal
+
+# docs (not needed in image)
+*.md
+!README.md
+
+# misc
+.DS_Store
+npm-debug.log*
+coverage
+.vercel

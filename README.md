@@ -46,16 +46,16 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run db:seed -- --reset` | Wipe DB, then seed |
 | `npm run db:reset` | Reset DB and re-seed |
 
-## Deploy to Railway
+## Deploy
 
-See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for step-by-step instructions.
+Uses **Docker** (`Dockerfile`). See **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
-Quick summary:
+```bash
+# Local production-like stack
+docker compose up --build
 
-1. Create Railway project + PostgreSQL database
-2. Set `DATABASE_URL=${{Postgres.DATABASE_URL}}` on the app service
-3. Deploy from GitHub — first startup migrates and seeds automatically
-4. Generate a public domain
+# Railway: connect repo + Postgres, set DATABASE_URL on app service, deploy
+```
 
 ## Project structure
 
@@ -65,8 +65,9 @@ src/app/api/       # Health check for Railway
 src/components/    # UI and feature components
 src/lib/           # Prisma client, queries, server actions
 prisma/            # Schema, migrations, seed
-railway.json       # Railway build & deploy config
-docker-compose.yml # Local Postgres
+Dockerfile           # Production image (Railway / Docker)
+docker-compose.yml   # Local Postgres + app
+railway.json         # Railway: use Dockerfile + healthcheck only
 ```
 
 See [PRD.md](./PRD.md) for full product requirements.

@@ -6,15 +6,18 @@ import { formatSeedResult, seedDatabase } from "../prisma/seed-data";
 const MIGRATE_RETRIES = 12;
 const MIGRATE_RETRY_MS = 5000;
 
-const DB_READY_TIMEOUT_MS = 90_000;
+const DB_READY_TIMEOUT_MS = 120_000;
 const DB_READY_INITIAL_DELAY_MS = 2_000;
-const DB_READY_MAX_DELAY_MS = 30_000;
+const DB_READY_MAX_DELAY_MS = 15_000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function waitForDatabase() {
+  const url = process.env.DATABASE_URL;
+  if (!url) return;
+
   const deadline = Date.now() + DB_READY_TIMEOUT_MS;
   let delay = DB_READY_INITIAL_DELAY_MS;
   let attempt = 0;
@@ -23,14 +26,12 @@ async function waitForDatabase() {
 
   while (true) {
     attempt++;
-    const client = new Client({ connectionString: process.env.DATABASE_URL });
+    const client = new Client({ connectionString: url });
     try {
       await client.connect();
       await client.query("SELECT 1");
       await client.end();
-      console.log(
-        `[startup] Postgres is ready (attempt ${attempt})`
-      );
+      console.log(`[startup] Postgres is ready (attempt ${attempt})`);
       return;
     } catch (err) {
       try {
@@ -42,18 +43,17 @@ async function waitForDatabase() {
       const remaining = deadline - Date.now();
       if (remaining <= 0) {
         throw new Error(
-          `[startup] Postgres did not become ready within ${DB_READY_TIMEOUT_MS / 1000}s. ` +
-            `Last error: ${err instanceof Error ? err.message : String(err)}`
+          `Postgres not ready within ${DB_READY_TIMEOUT_MS / 1000}s: ${
+            err instanceof Error ? err.message : String(err)
+          }`
         );
       }
 
       const wait = Math.min(delay, remaining);
       console.warn(
-        `[startup] Postgres not ready (attempt ${attempt}), retrying in ${wait / 1000}s… ` +
-          `(${Math.ceil(remaining / 1000)}s remaining) — ${err instanceof Error ? err.message : String(err)}`
+        `[startup] Postgres not ready (attempt ${attempt}), retry in ${wait / 1000}s…`
       );
       await sleep(wait);
-      // Exponential backoff, capped at DB_READY_MAX_DELAY_MS
       delay = Math.min(delay * 2, DB_READY_MAX_DELAY_MS);
     }
   }
@@ -73,7 +73,7 @@ async function migrateWithRetry() {
     } catch (err) {
       if (attempt === MIGRATE_RETRIES) throw err;
       console.warn(
-        `[startup] Migration failed, retrying in ${MIGRATE_RETRY_MS / 1000}s…`,
+        `[startup] Migration failed, retry in ${MIGRATE_RETRY_MS / 1000}s…`,
         err
       );
       await sleep(MIGRATE_RETRY_MS);
@@ -81,7 +81,7 @@ async function migrateWithRetry() {
   }
 }
 
-async function seedInBackground() {
+async function seedDatabaseSafe() {
   try {
     const prisma = createPrismaClient();
     try {
@@ -92,7 +92,7 @@ async function seedInBackground() {
       await prisma.$disconnect();
     }
   } catch (err) {
-    console.error("[startup] Seed failed (app keeps running):", err);
+    console.error("[startup] Seed failed:", err);
   }
 }
 
@@ -100,14 +100,10 @@ function startNextServer() {
   const port = process.env.PORT ?? "3000";
   console.log(`[startup] Starting Next.js on 0.0.0.0:${port}…`);
 
-  const next = spawn(
-    "npx",
-    ["next", "start", "-H", "0.0.0.0", "-p", port],
-    {
-      stdio: "inherit",
-      env: process.env,
-    }
-  );
+  const next = spawn("npx", ["next", "start", "-H", "0.0.0.0", "-p", port], {
+    stdio: "inherit",
+    env: process.env,
+  });
 
   next.on("error", (err) => {
     console.error("[startup] Next.js process error:", err);
@@ -125,23 +121,29 @@ function startNextServer() {
   return next;
 }
 
-async function main() {
+/** DB setup runs after HTTP is listening so Railway /api/health succeeds quickly. */
+async function setupDatabaseInBackground() {
   if (!process.env.DATABASE_URL) {
     console.error(
-      "[startup] DATABASE_URL is missing. Link Postgres on Railway: DATABASE_URL=${{Postgres.DATABASE_URL}}"
+      "[startup] DATABASE_URL is missing — set DATABASE_URL=${{Postgres.DATABASE_URL}} on this service"
     );
-    process.exit(1);
+    return;
   }
 
-  await waitForDatabase();
-  await migrateWithRetry();
-  startNextServer();
-
-  // Seed after HTTP server is up so /api/health responds during healthcheck
-  void seedInBackground();
+  try {
+    await waitForDatabase();
+    await migrateWithRetry();
+    await seedDatabaseSafe();
+    console.log("[startup] Database setup complete");
+  } catch (err) {
+    console.error("[startup] Database setup failed:", err);
+  }
 }
 
-main().catch((err) => {
-  console.error("[startup] Fatal:", err);
-  process.exit(1);
-});
+function main() {
+  // Start HTTP first — healthcheck hits /api/health without waiting for Postgres
+  startNextServer();
+  void setupDatabaseInBackground();
+}
+
+main();
