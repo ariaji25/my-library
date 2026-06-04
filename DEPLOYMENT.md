@@ -131,7 +131,43 @@ docker compose up --build
 
 - Uses `Dockerfile` + `railway.json`
 - `DATABASE_URL=${{Postgres.DATABASE_URL}}`
-- Start command: `npm run start` (custom startup script)
+- Do **not** override the start command — use the Dockerfile `CMD` (runs `scripts/startup.ts`)
+
+### SwiftWave
+
+Deploy from **Git** (uses this repo’s `Dockerfile`) or pull the **GHCR** image (`ghcr.io/<owner>/<repo>:latest`).
+
+**Start command:** leave empty so Docker uses the image `CMD`. If you set a custom command, do **not** use `npm run start` — npm turns SIGTERM into `npm error signal SIGTERM` even when shutdown is normal. Use the Dockerfile default or:
+
+```text
+node node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.json scripts/startup.ts
+```
+
+**Environment variables** (SwiftWave → Environment Variables):
+
+| Variable | Notes |
+|----------|--------|
+| `DATABASE_URL` | Postgres URL (required) |
+| `DIRECT_DATABASE_URL` | Supabase: direct port **5432** for migrations at startup |
+| `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | Same value as Docker **build** arg (see below) |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Optional login |
+| `PORT` | Usually `3000` (SwiftWave may inject this) |
+
+**GHCR builds:** add GitHub repo secret `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (`openssl rand -base64 32`), then set the same value in SwiftWave env vars and redeploy.
+
+**Custom health check** (Deployment Configuration → Custom Health Check):
+
+| Field | Suggested value |
+|-------|-----------------|
+| Test command | `node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"` |
+| Start period | `120` |
+| Interval | `30` |
+| Timeout | `10` |
+| Retries | `3` |
+
+**Memory:** reserve at least **512 MB** (Next.js + Prisma migrations at startup).
+
+**SIGTERM in logs after “Database setup complete”:** often a **normal** redeploy (old container stopped). If the **new** instance stays healthy and `/api/health` returns 200, you can ignore it. If instances keep restarting, check health check start period and that the start command is not `npm run start`.
 
 ### Local Docker
 
@@ -164,7 +200,7 @@ npm run dev
 | `P1000` auth failed on `localhost:5432` | Another Postgres may own port 5432; use `5433` in `.env` and `docker compose up -d postgres` (this repo maps `5433:5432`) |
 | `db:migrate` hangs or never finishes | `.env` points at **Supabase transaction pooler** (`:6543`). Use `DIRECT_DATABASE_URL` (port **5432** direct) for migrations, or local `localhost:5433` for dev |
 | `Failed to find Server Action "y"` | Old browser tab after redeploy, or missing `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`. Set the same key at **image build** time, rebuild, hard-refresh the site |
-| `npm error signal SIGTERM` on startup | Normal during container replace; ensure healthcheck passes and set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` before `docker compose build` |
+| `npm error signal SIGTERM` on startup | Container was stopped during redeploy (often harmless). On SwiftWave/Railway: **do not** use `npm run start` as the start command; use Dockerfile `CMD`. Set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` at build time |
 | Empty library after deploy | Run `npm run db:seed` once |
 | Prisma client not found | Build runs `prisma generate`; clear cache and redeploy |
 

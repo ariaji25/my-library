@@ -114,6 +114,9 @@ async function seedDatabaseSafe() {
   }
 }
 
+const GRACEFUL_SIGNALS: NodeJS.Signals[] = ["SIGTERM", "SIGINT"];
+let shuttingDown = false;
+
 function startNextServer() {
   const port = process.env.PORT ?? "3000";
   console.log(`[startup] Starting Next.js on 0.0.0.0:${port}…`);
@@ -124,12 +127,15 @@ function startNextServer() {
   });
 
   const forwardSignal = (name: NodeJS.Signals) => {
-    console.log(`[startup] Received ${name}, shutting down Next.js…`);
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`[startup] Received ${name}, shutting down…`);
     if (!next.killed) next.kill(name);
   };
 
-  process.on("SIGTERM", () => forwardSignal("SIGTERM"));
-  process.on("SIGINT", () => forwardSignal("SIGINT"));
+  for (const signal of GRACEFUL_SIGNALS) {
+    process.on(signal, () => forwardSignal(signal));
+  }
 
   next.on("error", (err) => {
     console.error("[startup] Next.js process error:", err);
@@ -137,8 +143,12 @@ function startNextServer() {
   });
 
   next.on("exit", (code, signal) => {
+    if (shuttingDown && signal && GRACEFUL_SIGNALS.includes(signal)) {
+      process.exit(0);
+      return;
+    }
     if (signal) {
-      console.error(`[startup] Next.js exited (${signal})`);
+      console.error(`[startup] Next.js exited unexpectedly (${signal})`);
       process.exit(1);
     }
     process.exit(code ?? 0);

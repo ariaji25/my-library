@@ -56,5 +56,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
-# Run tsx directly so Docker SIGTERM reaches startup.ts (not swallowed by npm)
-CMD ["npx", "tsx", "--tsconfig", "tsconfig.json", "scripts/startup.ts"]
+# node + tsx (no npm/npx) so SIGTERM reaches startup.ts and logs stay clean
+CMD ["node", "node_modules/tsx/dist/cli.mjs", "--tsconfig", "tsconfig.json", "scripts/startup.ts"]
