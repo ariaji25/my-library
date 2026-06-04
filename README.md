@@ -1,10 +1,10 @@
-# My Library
+# Arinda's Library
 
 A personal digital bookshelf to manage your book collection, track reading progress, save wishlists, and document reviews and favorite quotes.
 
 ## Features (MVP)
 
-- **Dashboard** — stats, reading progress, genre chart, recent activity
+- **Dashboard** — stats, monthly progress chart, reading progress, genre chart, recent activity
 - **Library** — cover-first grid with search, filter, and sort
 - **Book detail** — status, dates, rating, markdown review, quotes
 - **Wishlist** — books to buy with priority and notes
@@ -48,7 +48,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Deploy
 
-**Vercel** (recommended) or **Docker/Railway**. See **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+**Vercel** (recommended), **GHCR Docker image** (GitHub Actions on `main`), or **Docker/Railway**. See **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
 ```bash
 # Vercel: import repo, add Postgres, set DATABASE_URL, deploy

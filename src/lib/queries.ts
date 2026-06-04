@@ -1,6 +1,10 @@
 import type { BookStatus, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { SortOption } from "@/lib/constants";
+import {
+  buildMonthlyProgress,
+  getCurrentMonthProgress,
+} from "@/lib/monthly-progress";
 
 export type BookFilters = {
   q?: string;
@@ -73,7 +77,16 @@ export async function getDashboardStats() {
       prisma.book.count({ where: { status: "NOT_STARTED" } }),
       prisma.book.count({ where: { status: "WISHLIST" } }),
       prisma.book.findMany({
-        select: { genre: true, status: true, title: true, createdAt: true, completedAt: true, review: true, author: true },
+        select: {
+          genre: true,
+          status: true,
+          title: true,
+          createdAt: true,
+          completedAt: true,
+          startedAt: true,
+          review: true,
+          author: true,
+        },
         orderBy: { createdAt: "desc" },
       }),
       prisma.wishlistItem.count(),
@@ -110,6 +123,14 @@ export async function getDashboardStats() {
   const genres = [...new Set(books.map((b) => b.genre))].sort();
   const authors = [...new Set(books.map((b) => b.author))].sort();
 
+  const monthlyProgress = buildMonthlyProgress(
+    books.map((b) => ({
+      completedAt: b.completedAt,
+      startedAt: b.startedAt,
+    }))
+  );
+  const currentMonth = getCurrentMonthProgress(monthlyProgress);
+
   return {
     total,
     read,
@@ -124,6 +145,8 @@ export async function getDashboardStats() {
     latestReview,
     genres,
     authors,
+    monthlyProgress,
+    currentMonth,
   };
 }
 

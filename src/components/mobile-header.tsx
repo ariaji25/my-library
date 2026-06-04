@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BookMarked } from "lucide-react";
+import { APP_NAME } from "@/lib/constants";
 import { SHELL_MAX, SHELL_PX } from "@/lib/layout-shell";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -18,7 +19,7 @@ export function MobileHeader() {
             <BookMarked className="h-3.5 w-3.5 text-primary" />
           </div>
           <span className="font-heading truncate text-base font-semibold leading-none">
-            My Library
+            {APP_NAME}
           </span>
         </Link>
         <ThemeToggle />

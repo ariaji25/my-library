@@ -12,6 +12,7 @@ import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { GenreChart } from "@/components/genre-chart";
+import { MonthlyProgressChart } from "@/components/monthly-progress-chart";
 
 export default async function DashboardPage() {
   const stats = await getDashboardStats();
@@ -53,6 +54,36 @@ export default async function DashboardPage() {
           icon={Bookmark}
         />
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <CardTitle>Monthly progress</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Books started and finished over the last 12 months
+            </p>
+          </div>
+          {stats.currentMonth && (
+            <div className="flex gap-6 text-sm tabular-nums">
+              <div>
+                <span className="text-muted-foreground">This month finished</span>
+                <p className="text-2xl font-semibold">
+                  {stats.currentMonth.completed}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">This month started</span>
+                <p className="text-2xl font-semibold">
+                  {stats.currentMonth.started}
+                </p>
+              </div>
+            </div>
+          )}
+        </CardHeader>
+        <CardContent>
+          <MonthlyProgressChart data={stats.monthlyProgress} />
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

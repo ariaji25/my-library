@@ -1,4 +1,4 @@
-# Deploy My Library
+# Deploy Arinda's Library
 
 ## Vercel (recommended)
 
@@ -74,7 +74,36 @@ Or from Vercel dashboard → project → **⋯** → **Open in Terminal** → `n
 
 ## Docker / Railway
 
-See previous sections below for Docker Compose and Railway Dockerfile deploy.
+### GitHub Container Registry (GHCR)
+
+On every push to `main`, [`.github/workflows/docker.yml`](./.github/workflows/docker.yml) builds the image and pushes to:
+
+```text
+ghcr.io/<owner>/<repo>:latest
+ghcr.io/<owner>/<repo>:<git-sha>
+```
+
+Tagged releases (`v1.0.0`, etc.) also get semver tags. Pull requests only **build** the image (no push).
+
+**Pull and run** (replace owner/repo with yours, e.g. `ghcr.io/apurnama/my-library`):
+
+```bash
+docker pull ghcr.io/<owner>/<repo>:latest
+docker run --rm -p 3000:3000 \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
+  -e NODE_ENV=production \
+  ghcr.io/<owner>/<repo>:latest
+```
+
+For a **private** repo, log in first:
+
+```bash
+echo "$GITHUB_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USER --password-stdin
+```
+
+Then grant the token `read:packages`. To make the image public: GitHub → **Packages** → your package → **Package settings** → **Change visibility**.
+
+Migrations run at container start via `npm run start` (see `scripts/startup.ts`). Ensure `DATABASE_URL` points at a reachable Postgres instance.
 
 ### Railway
 
@@ -110,6 +139,7 @@ npm run dev
 | `inject-built-with-v0.mjs` | Remove `NODE_OPTIONS` from Vercel env (see above) |
 | Build fails on `migrate deploy` | Set `DATABASE_URL` for Production + Preview; or use Neon/Vercel Postgres integration |
 | `DATABASE_URL` at runtime | Same variable on project; redeploy after adding |
+| `P1000` auth failed on `localhost:5432` | Another Postgres may own port 5432; use `5433` in `.env` and `docker compose up -d postgres` (this repo maps `5433:5432`) |
 | Empty library after deploy | Run `npm run db:seed` once |
 | Prisma client not found | Build runs `prisma generate`; clear cache and redeploy |
 

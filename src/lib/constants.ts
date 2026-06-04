@@ -1,5 +1,7 @@
 import type { BookStatus, WishlistPriority } from "@/generated/prisma/client";
 
+export const APP_NAME = "Arinda's Library";
+
 export const BOOK_STATUSES: { value: BookStatus; label: string }[] = [
   { value: "NOT_STARTED", label: "Not Started" },
   { value: "READING", label: "Reading" },

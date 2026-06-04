@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Nunito } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { APP_NAME } from "@/lib/constants";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -16,8 +17,8 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "My Library",
-  description: "Your personal digital bookshelf",
+  title: APP_NAME,
+  description: "Arinda's personal digital bookshelf",
 };
 
 export default function RootLayout({

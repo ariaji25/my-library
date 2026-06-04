@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookMarked } from "lucide-react";
+import { APP_NAME } from "@/lib/constants";
 import { NAV_ITEMS, isNavActive } from "@/lib/nav";
 import { SHELL_MAX, SHELL_PX } from "@/lib/layout-shell";
 import { cn } from "@/lib/utils";
@@ -28,7 +29,7 @@ export function TopNav() {
             <BookMarked className="h-4 w-4 text-primary" strokeWidth={2} />
           </div>
           <span className="font-heading text-lg font-semibold leading-none">
-            My Library
+            {APP_NAME}
           </span>
         </Link>
 
