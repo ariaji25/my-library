@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { TopNav } from "@/components/top-nav";
 import { MobileHeader } from "@/components/mobile-header";
 import { MobileNav } from "@/components/mobile-nav";
+import { isAuthEnabled } from "@/lib/auth";
 import { SHELL_MAX, SHELL_PX } from "@/lib/layout-shell";
 import { cn } from "@/lib/utils";
 
@@ -11,10 +12,12 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const showSignOut = isAuthEnabled();
+
   return (
     <div className="flex min-h-dvh flex-col">
-      <TopNav />
-      <MobileHeader />
+      <TopNav showSignOut={showSignOut} />
+      <MobileHeader showSignOut={showSignOut} />
 
       <main
         className={cn(

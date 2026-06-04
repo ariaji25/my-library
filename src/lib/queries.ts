@@ -2,9 +2,11 @@ import type { BookStatus, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { SortOption } from "@/lib/constants";
 import {
-  buildMonthlyProgress,
-  getCurrentMonthProgress,
+  buildWeeklyProgress,
+  getCurrentWeekProgress,
 } from "@/lib/monthly-progress";
+import { serializeReadingActivity } from "@/lib/reading-activity";
+import { subMonths } from "date-fns";
 
 export type BookFilters = {
   q?: string;
@@ -64,7 +66,11 @@ export async function getBooks(filters: BookFilters = {}) {
 export async function getBook(id: string) {
   return prisma.book.findUnique({
     where: { id },
-    include: { quotes: { orderBy: { id: "asc" } }, collections: true },
+    include: {
+      quotes: { orderBy: { id: "asc" } },
+      readingLogs: { orderBy: { date: "desc" } },
+      collections: true,
+    },
   });
 }
 
@@ -123,13 +129,37 @@ export async function getDashboardStats() {
   const genres = [...new Set(books.map((b) => b.genre))].sort();
   const authors = [...new Set(books.map((b) => b.author))].sort();
 
-  const monthlyProgress = buildMonthlyProgress(
-    books.map((b) => ({
-      completedAt: b.completedAt,
-      startedAt: b.startedAt,
-    }))
-  );
-  const currentMonth = getCurrentMonthProgress(monthlyProgress);
+  const bookDates = books.map((b) => ({
+    completedAt: b.completedAt,
+    startedAt: b.startedAt,
+  }));
+  const weeklyProgress = buildWeeklyProgress(bookDates);
+  const currentWeek = getCurrentWeekProgress(weeklyProgress);
+
+  const quoteOfTheDay = await prisma.readingLog.findFirst({
+    where: { quoteOfTheDay: { not: null } },
+    orderBy: { date: "desc" },
+    select: {
+      quoteOfTheDay: true,
+      date: true,
+      book: { select: { id: true, title: true, author: true } },
+    },
+  });
+
+  const readingLogs = await prisma.readingLog.findMany({
+    where: { date: { gte: subMonths(new Date(), 12) } },
+    orderBy: { date: "desc" },
+    select: {
+      id: true,
+      date: true,
+      pagesRead: true,
+      minutesRead: true,
+      quoteOfTheDay: true,
+      book: { select: { id: true, title: true, author: true } },
+    },
+  });
+
+  const readingActivity = serializeReadingActivity(readingLogs);
 
   return {
     total,
@@ -145,8 +175,10 @@ export async function getDashboardStats() {
     latestReview,
     genres,
     authors,
-    monthlyProgress,
-    currentMonth,
+    weeklyProgress,
+    currentWeek,
+    quoteOfTheDay,
+    readingActivity,
   };
 }
 

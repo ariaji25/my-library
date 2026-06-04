@@ -105,6 +105,28 @@ Then grant the token `read:packages`. To make the image public: GitHub → **Pac
 
 Migrations run at container start via `npm run start` (see `scripts/startup.ts`). Ensure `DATABASE_URL` points at a reachable Postgres instance.
 
+### Docker Compose (app + Postgres)
+
+[`docker-compose.example.yml`](./docker-compose.example.yml) runs the published image with a bundled Postgres database:
+
+```bash
+cp docker-compose.example.yml docker-compose.prod.yml
+cp .env.compose.example .env
+# Edit .env: POSTGRES_PASSWORD, APP_IMAGE (ghcr.io/<owner>/<repo>:latest)
+
+docker compose -f docker-compose.prod.yml --env-file .env up -d
+```
+
+Open http://localhost:3000 (or your `APP_PORT`). Postgres stays on the internal Docker network only.
+
+Uploaded book covers are stored under `public/uploads/covers/` and persisted via the `cover_uploads` Docker volume. On **Vercel**, the filesystem is ephemeral — use cover **URLs** there, or deploy with Docker/Railway for file uploads.
+
+**Build from source** instead of GHCR: uncomment the `build:` block under `app` in the compose file and set `APP_IMAGE=` empty, or use the repo’s [`docker-compose.yml`](./docker-compose.yml):
+
+```bash
+docker compose up --build
+```
+
 ### Railway
 
 - Uses `Dockerfile` + `railway.json`
@@ -149,5 +171,24 @@ npm run dev
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL URL (build + runtime) |
 | `NODE_ENV` | Recommended | `production` on Vercel |
+| `ADMIN_EMAIL` | For login | Admin email (no database — env only) |
+| `ADMIN_PASSWORD` | For login | Admin password |
+
+### Admin login (email + password)
+
+The app has **no user accounts in the database**. For a private live deployment, set both variables on the host (Vercel, Railway, Docker, etc.):
+
+```bash
+ADMIN_EMAIL=you@example.com
+ADMIN_PASSWORD=your-strong-password
+```
+
+Redeploy or restart the container. Visitors are redirected to `/login` until they sign in. `/api/health` stays public for Docker health checks.
+
+Leave both **unset** during local dev if you want open access without signing in.
+
+**Vercel:** Project → Settings → Environment Variables → add the three for Production (and Preview if needed).
+
+**Docker Compose:** set them in `.env` (see `.env.compose.example`).
 
 See [.env.example](./.env.example).

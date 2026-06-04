@@ -67,7 +67,8 @@ src/components/    # UI and feature components
 src/lib/           # Prisma client, queries, server actions
 prisma/            # Schema, migrations, seed
 Dockerfile           # Production image (Railway / Docker)
-docker-compose.yml   # Local Postgres + app
+docker-compose.yml           # Local dev: build app + Postgres (host port 5433)
+docker-compose.example.yml   # Deploy: GHCR image + Postgres (see .env.compose.example)
 railway.json         # Railway: use Dockerfile + healthcheck only
 ```
 

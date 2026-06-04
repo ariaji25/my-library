@@ -7,9 +7,9 @@ import { APP_NAME } from "@/lib/constants";
 import { NAV_ITEMS, isNavActive } from "@/lib/nav";
 import { SHELL_MAX, SHELL_PX } from "@/lib/layout-shell";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { HeaderActions } from "@/components/header-actions";
 
-export function TopNav() {
+export function TopNav({ showSignOut = false }: { showSignOut?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -60,9 +60,7 @@ export function TopNav() {
           })}
         </nav>
 
-        <div className="flex shrink-0 items-center">
-          <ThemeToggle />
-        </div>
+        <HeaderActions showSignOut={showSignOut} />
       </div>
     </header>
   );

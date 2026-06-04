@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { BookStatus, WishlistPriority } from "@/generated/prisma/client";
+import {
+  deleteUploadedCover,
+  resolveCoverFromFormData,
+} from "@/lib/cover-upload";
 import { prisma } from "@/lib/prisma";
 
 function revalidateAll() {
@@ -19,12 +23,13 @@ export async function createBook(formData: FormData) {
   const publishedYear = formData.get("publishedYear")
     ? Number(formData.get("publishedYear"))
     : null;
-  const coverImage = String(formData.get("coverImage") ?? "").trim() || null;
   const status = (formData.get("status") as BookStatus) || "NOT_STARTED";
 
   if (!title || !author || !genre) {
     throw new Error("Title, author, and genre are required");
   }
+
+  const coverImage = await resolveCoverFromFormData(formData);
 
   const book = await prisma.book.create({
     data: {
@@ -48,9 +53,13 @@ export async function updateBook(id: string, formData: FormData) {
   const publishedYear = formData.get("publishedYear")
     ? Number(formData.get("publishedYear"))
     : null;
-  const coverImage = String(formData.get("coverImage") ?? "").trim() || null;
   const status = formData.get("status") as BookStatus;
   const rating = formData.get("rating") ? Number(formData.get("rating")) : null;
+  const totalPagesRaw = formData.get("totalPages");
+  const totalPages =
+    totalPagesRaw && String(totalPagesRaw).trim()
+      ? Number(totalPagesRaw)
+      : null;
   const review = String(formData.get("review") ?? "").trim() || null;
   const startedAt = formData.get("startedAt")
     ? new Date(String(formData.get("startedAt")))
@@ -58,6 +67,15 @@ export async function updateBook(id: string, formData: FormData) {
   const completedAt = formData.get("completedAt")
     ? new Date(String(formData.get("completedAt")))
     : null;
+
+  const existing = await prisma.book.findUnique({
+    where: { id },
+    select: { coverImage: true },
+  });
+  const coverImage = await resolveCoverFromFormData(
+    formData,
+    existing?.coverImage
+  );
 
   await prisma.book.update({
     where: { id },
@@ -69,6 +87,10 @@ export async function updateBook(id: string, formData: FormData) {
       coverImage,
       status,
       rating: rating && rating >= 1 && rating <= 5 ? rating : null,
+      totalPages:
+        totalPages && Number.isFinite(totalPages) && totalPages > 0
+          ? Math.round(totalPages)
+          : null,
       review,
       startedAt,
       completedAt,
@@ -82,7 +104,12 @@ export async function updateBook(id: string, formData: FormData) {
 }
 
 export async function deleteBook(id: string) {
+  const book = await prisma.book.findUnique({
+    where: { id },
+    select: { coverImage: true },
+  });
   await prisma.book.delete({ where: { id } });
+  await deleteUploadedCover(book?.coverImage);
   revalidateAll();
   redirect("/library");
 }
@@ -112,6 +139,54 @@ export async function addQuote(bookId: string, formData: FormData) {
 
 export async function deleteQuote(quoteId: string, bookId: string) {
   await prisma.quote.delete({ where: { id: quoteId } });
+  revalidatePath(`/books/${bookId}`);
+}
+
+export async function addReadingLog(bookId: string, formData: FormData) {
+  const dateRaw = String(formData.get("date") ?? "").trim();
+  const pagesRaw = formData.get("pagesRead");
+  const minutesRaw = formData.get("minutesRead");
+  const quoteOfTheDay =
+    String(formData.get("quoteOfTheDay") ?? "").trim() || null;
+
+  const pagesRead = Number(pagesRaw);
+  const minutesRead = Number(minutesRaw);
+
+  if (!dateRaw) throw new Error("Date is required");
+  if (!Number.isFinite(pagesRead) || pagesRead < 1) {
+    throw new Error("Pages read must be at least 1");
+  }
+  if (!Number.isFinite(minutesRead) || minutesRead < 1) {
+    throw new Error("Reading time must be at least 1 minute");
+  }
+
+  await prisma.readingLog.create({
+    data: {
+      bookId,
+      date: new Date(dateRaw),
+      pagesRead: Math.round(pagesRead),
+      minutesRead: Math.round(minutesRead),
+      quoteOfTheDay,
+    },
+  });
+
+  const book = await prisma.book.findUnique({
+    where: { id: bookId },
+    select: { status: true, startedAt: true },
+  });
+  if (book && book.status === "NOT_STARTED") {
+    await prisma.book.update({
+      where: { id: bookId },
+      data: { status: "READING", startedAt: book.startedAt ?? new Date(dateRaw) },
+    });
+    revalidateAll();
+  }
+
+  revalidatePath(`/books/${bookId}`);
+}
+
+export async function deleteReadingLog(logId: string, bookId: string) {
+  await prisma.readingLog.delete({ where: { id: logId } });
   revalidatePath(`/books/${bookId}`);
 }
 

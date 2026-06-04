@@ -27,9 +27,12 @@ services:
       DATABASE_URL: postgresql://mylibrary:mylibrary@postgres:5432/mylibrary
       NODE_ENV: production
       PORT: "3000"
+    volumes:
+      - cover_uploads:/app/public/uploads
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   postgres_data:
+  cover_uploads:

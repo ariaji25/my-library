@@ -21,21 +21,36 @@ enum WishlistPriority {
 }
 
 model Book {
-  id            String     @id @default(uuid())
+  id            String       @id @default(uuid())
   title         String
   author        String
   genre         String
   publishedYear Int?
   coverImage    String?
-  status        BookStatus @default(NOT_STARTED)
+  totalPages    Int?
+  status        BookStatus   @default(NOT_STARTED)
   rating        Int?
   review        String?
   startedAt     DateTime?
   completedAt   DateTime?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   quotes        Quote[]
+  readingLogs   ReadingLog[]
   collections   CollectionBook[]
+}
+
+model ReadingLog {
+  id            String   @id @default(uuid())
+  bookId        String
+  date          DateTime
+  pagesRead     Int
+  minutesRead   Int
+  quoteOfTheDay String?
+  createdAt     DateTime @default(now())
+  book          Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId, date(sort: Desc)])
 }
 
 model Quote {

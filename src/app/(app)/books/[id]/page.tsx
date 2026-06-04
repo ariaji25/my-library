@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CoverImageFields } from "@/components/cover-image-fields";
+import { ReadingLogSection } from "@/components/reading-log-section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function BookDetailPage({
@@ -105,7 +107,11 @@ export default async function BookDetailPage({
           <CardTitle>Edit details</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={updateWithId} className="grid gap-4 md:grid-cols-2">
+          <form
+            action={updateWithId}
+            encType="multipart/form-data"
+            className="grid gap-4 md:grid-cols-2"
+          >
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
               <Input id="title" name="title" defaultValue={book.title} required />
@@ -127,14 +133,7 @@ export default async function BookDetailPage({
                 defaultValue={book.publishedYear ?? ""}
               />
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="coverImage">Cover URL</Label>
-              <Input
-                id="coverImage"
-                name="coverImage"
-                defaultValue={book.coverImage ?? ""}
-              />
-            </div>
+            <CoverImageFields currentCover={book.coverImage} />
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <select
@@ -149,6 +148,17 @@ export default async function BookDetailPage({
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="totalPages">Total pages</Label>
+              <Input
+                id="totalPages"
+                name="totalPages"
+                type="number"
+                min={1}
+                placeholder="For progress tracking"
+                defaultValue={book.totalPages ?? ""}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="rating">Rating (1–5)</Label>
@@ -201,6 +211,14 @@ export default async function BookDetailPage({
           </form>
         </CardContent>
       </Card>
+
+      <ReadingLogSection
+        bookId={book.id}
+        title={book.title}
+        author={book.author}
+        totalPages={book.totalPages}
+        logs={book.readingLogs}
+      />
 
       {book.review && (
         <Card>

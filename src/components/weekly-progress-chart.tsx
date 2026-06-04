@@ -11,37 +11,32 @@ import {
   YAxis,
 } from "recharts";
 
-export type MonthlyProgressChartPoint = {
+export type WeeklyProgressChartPoint = {
   label: string;
   completed: number;
   started: number;
 };
 
-export function MonthlyProgressChart({
+export function WeeklyProgressChart({
   data,
 }: {
-  data: MonthlyProgressChartPoint[];
+  data: WeeklyProgressChartPoint[];
 }) {
   const hasActivity = data.some((d) => d.completed > 0 || d.started > 0);
 
   if (!hasActivity) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
-        Finish or start books to see monthly progress.
+        Finish or start books to see weekly progress.
       </p>
     );
   }
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border/60" />
-        <XAxis
-          dataKey="label"
-          tick={{ fontSize: 11 }}
-          interval="preserveStartEnd"
-          tickFormatter={(value: string) => value.replace(/\s\d{4}$/, "")}
-        />
+        <XAxis dataKey="label" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
         <YAxis allowDecimals={false} tick={{ fontSize: 12 }} width={28} />
         <Tooltip
           contentStyle={{

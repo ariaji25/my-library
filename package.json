@@ -13,6 +13,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
+    "test:book-search": "tsx scripts/test-book-search.ts",
     "postinstall": "prisma generate"
   },
   "engines": {

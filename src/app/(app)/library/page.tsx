@@ -5,6 +5,7 @@ import type { BookStatus } from "@/generated/prisma/client";
 import { getBooks, getDashboardStats } from "@/lib/queries";
 import type { SortOption } from "@/lib/constants";
 import { BookCard } from "@/components/book-card";
+import { LibraryBookSearch } from "@/components/library-book-search";
 import { LibraryFilters } from "@/components/library-filters";
 import { Button } from "@/components/ui/button";
 
@@ -50,6 +51,8 @@ export default async function LibraryPage({
           </Link>
         </Button>
       </div>
+
+      <LibraryBookSearch />
 
       <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-muted" />}>
         <LibraryFilters genres={genres} authors={authors} />

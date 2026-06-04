@@ -26,7 +26,12 @@ export function LibraryFilters({ genres, authors }: Props) {
 
   return (
     <div className="flex flex-col gap-3 sm:gap-4">
-      <SearchInput placeholder="Search title, author, genre, review..." />
+      <div className="space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Filter your collection
+        </p>
+        <SearchInput placeholder="Search your books…" />
+      </div>
 
       <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap sm:gap-2">
         <select

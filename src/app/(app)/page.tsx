@@ -6,13 +6,15 @@ import {
   BookPlus,
   Bookmark,
   Library,
+  Quote,
 } from "lucide-react";
 import { getDashboardStats } from "@/lib/queries";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { GenreChart } from "@/components/genre-chart";
-import { MonthlyProgressChart } from "@/components/monthly-progress-chart";
+import { WeeklyProgressChart } from "@/components/weekly-progress-chart";
+import { ReadingActivityDashboard } from "@/components/reading-activity-dashboard";
 
 export default async function DashboardPage() {
   const stats = await getDashboardStats();
@@ -39,6 +41,33 @@ export default async function DashboardPage() {
         </Link>
       </section>
 
+      {stats.quoteOfTheDay?.quoteOfTheDay && (
+        <Card className="border-primary/20 bg-gradient-to-br from-card via-card to-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Quote className="h-5 w-5 text-primary" />
+              Quote of the day
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-base italic leading-relaxed sm:text-lg">
+              &ldquo;{stats.quoteOfTheDay.quoteOfTheDay}&rdquo;
+            </p>
+            <Link
+              href={`/books/${stats.quoteOfTheDay.book.id}`}
+              className="mt-3 inline-block text-sm text-muted-foreground hover:text-primary"
+            >
+              {stats.quoteOfTheDay.book.title} ·{" "}
+              {stats.quoteOfTheDay.book.author}
+              {" · "}
+              {format(stats.quoteOfTheDay.date, "MMM d, yyyy")}
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      <ReadingActivityDashboard {...stats.readingActivity} />
+
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
         <StatCard label="Total Books" value={stats.total} icon={Library} />
         <StatCard label="Read" value={stats.read} icon={BookCheck} />
@@ -58,30 +87,30 @@ export default async function DashboardPage() {
       <Card>
         <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardTitle>Monthly progress</CardTitle>
+            <CardTitle>Weekly progress</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Books started and finished over the last 12 months
+              Books started and finished over the last 12 weeks
             </p>
           </div>
-          {stats.currentMonth && (
+          {stats.currentWeek && (
             <div className="flex gap-6 text-sm tabular-nums">
               <div>
-                <span className="text-muted-foreground">This month finished</span>
+                <span className="text-muted-foreground">This week finished</span>
                 <p className="text-2xl font-semibold">
-                  {stats.currentMonth.completed}
+                  {stats.currentWeek.completed}
                 </p>
               </div>
               <div>
-                <span className="text-muted-foreground">This month started</span>
+                <span className="text-muted-foreground">This week started</span>
                 <p className="text-2xl font-semibold">
-                  {stats.currentMonth.started}
+                  {stats.currentWeek.started}
                 </p>
               </div>
             </div>
           )}
         </CardHeader>
         <CardContent>
-          <MonthlyProgressChart data={stats.monthlyProgress} />
+          <WeeklyProgressChart data={stats.weeklyProgress} />
         </CardContent>
       </Card>
 

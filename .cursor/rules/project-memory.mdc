@@ -1,0 +1,95 @@
+---
+description: Arinda's Library — project context, conventions, and session progress
+alwaysApply: true
+---
+
+# Arinda's Library — project memory
+
+Personal Next.js 16 bookshelf app (Prisma + PostgreSQL). Display name: **Arinda's Library** (`APP_NAME` in `src/lib/constants.ts`).
+
+## Stack
+
+- Next.js 16 (App Router), React 19, Prisma 7, PostgreSQL, Tailwind, shadcn-style UI
+- Read Next.js docs in `node_modules/next/dist/docs/` before changing framework code (non-standard APIs)
+- Server actions: `experimental.serverActions.bodySizeLimit: "5mb"` in `next.config.ts`
+
+## Local development
+
+```bash
+docker compose up -d postgres   # Postgres on host port 5433 (not 5432 — other project may use 5432)
+cp .env.example .env
+npm install
+npm run db:migrate              # or db:migrate:deploy
+npm run db:seed
+npm run dev                     # http://localhost:3000
+npm run test:book-search        # verifies Open Library + /api/books/search
+```
+
+## Environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | PostgreSQL (local: `localhost:5433`) |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Optional admin login; **both must be set** to enable auth |
+| `GOOGLE_BOOKS_API_KEY` | Not implemented yet; discussed as optional upgrade |
+
+Auth: no DB users — env-only admin. Session cookie signed with email+password. Public paths: `/login`, `/api/health`, `/api/books/search`.
+
+## Deployment
+
+- **GHCR**: `.github/workflows/docker.yml` → `ghcr.io/<owner>/<repo>:latest` on `main`
+- **Compose prod**: `docker-compose.example.yml` + `.env.compose.example` (pull GHCR image + Postgres + `cover_uploads` volume)
+- **Vercel**: see `DEPLOYMENT.md`; use cover **URLs** only (no persistent uploads)
+- Migrations run at container start via `scripts/startup.ts`
+
+## Features implemented
+
+- Dashboard: stats, **monthly progress** chart (`src/lib/monthly-progress.ts`), genre chart, recent activity
+- Library: grid, filters, local search (`?q=` — filters **collection only**, not Open Library)
+- **Find & add book**: `LibraryBookSearch` on `/library` (outside Suspense) + lookup on `/library/new` (`AddBookForm`)
+- Book CRUD, status, ratings, reviews, quotes, wishlist, collections
+- **Cover upload**: `public/uploads/covers/` + URL; `src/lib/cover-upload.ts`; Docker volume `cover_uploads`
+
+## Book search (Open Library)
+
+- API: `GET /api/books/search?q=` → `src/lib/book-search.ts`
+- UI: `BookSearchAutocomplete` — debounced fetch from `onChange` (not only useEffect)
+- Types: `src/lib/book-search-types.ts` (client-safe; do not import `cover-upload.ts` or `book-search.ts` in client components except types)
+- Indonesian books: only if present in Open Library (e.g. "bumi manusia"); not full ID catalog
+- Google Books API: free with quotas + API key; **not integrated** — better ID coverage if added later
+
+## Client / server boundaries (important)
+
+- `HeaderActions`, `SignOutButton` are **client** components (`"use client"`)
+- Never import async server components into client nav (`TopNav`, `MobileHeader`)
+- `showSignOut` passed from `(app)/layout.tsx` via `isAuthEnabled()`
+- `LibraryBookSearch` must stay **outside** `<Suspense>` on library page so search hydrates reliably
+
+## Key paths
+
+```
+src/app/(app)/          # Dashboard, library, books, wishlist, collections
+src/app/login/          # Admin login
+src/app/api/books/search/
+src/lib/auth.ts         # ADMIN_EMAIL/PASSWORD auth
+src/components/book-search-autocomplete.tsx
+src/components/library-book-search.tsx
+docker-compose.yml      # Dev: build app + postgres:5433
+docker-compose.example.yml
+```
+
+## Known issues / troubleshooting
+
+| Symptom | Cause / fix |
+|---------|-------------|
+| DB `P1000` on port 5432 | Use `DATABASE_URL` with **5433** and `docker compose up -d postgres` |
+| No `/api/books/search` in Network tab | Wrong search box (use pink Open Library box); restart dev + hard refresh; check client hydration |
+| Search API 401 | `/api/books/search` must be in `PUBLIC_PATHS` in `middleware.ts` |
+| Covers lost on Vercel | Use URL or deploy with Docker + volume |
+| `npm run test:book-search` fails HTTP | Start `npm run dev` first |
+
+## Conventions
+
+- Minimize scope; match existing patterns; no commits unless user asks
+- Package name `my-library` (npm); user-facing name Arinda's Library
+- Only create commits when explicitly requested

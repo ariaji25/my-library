@@ -1,0 +1,58 @@
+# Example: run Arinda's Library with Postgres (image from GHCR or local build).
+#
+#   cp docker-compose.example.yml docker-compose.prod.yml
+#   cp .env.compose.example .env
+#   # Edit .env — set POSTGRES_PASSWORD and APP_IMAGE (your GHCR path)
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d
+#
+# Private GHCR image:
+#   echo "$GITHUB_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USER --password-stdin
+#
+# Build from source instead of pulling:
+#   Set APP_IMAGE= (empty) and uncomment the `build:` block under `app` below.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mylibrary}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-mylibrary}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-mylibrary} -d ${POSTGRES_DB:-mylibrary}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    image: ${APP_IMAGE:-ghcr.io/YOUR_GITHUB_USER/my-library:latest}
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mylibrary}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mylibrary}
+      NODE_ENV: production
+      PORT: "3000"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      # Optional: wipe DB and re-seed on every container start (first deploy only)
+      # SEED_DATABASE: "true"
+    volumes:
+      - cover_uploads:/app/public/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  cover_uploads:

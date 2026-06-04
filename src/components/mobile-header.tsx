@@ -5,9 +5,9 @@ import { BookMarked } from "lucide-react";
 import { APP_NAME } from "@/lib/constants";
 import { SHELL_MAX, SHELL_PX } from "@/lib/layout-shell";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { HeaderActions } from "@/components/header-actions";
 
-export function MobileHeader() {
+export function MobileHeader({ showSignOut = false }: { showSignOut?: boolean }) {
   return (
     <header className="fixed inset-x-0 top-0 z-40 shrink-0 border-b border-border/80 bg-card/95 backdrop-blur-md md:hidden">
       <div
@@ -22,7 +22,7 @@ export function MobileHeader() {
             {APP_NAME}
           </span>
         </Link>
-        <ThemeToggle />
+        <HeaderActions showSignOut={showSignOut} />
       </div>
     </header>
   );
