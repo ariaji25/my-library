@@ -20,6 +20,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:-}
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -27,6 +29,7 @@ services:
       DATABASE_URL: postgresql://mylibrary:mylibrary@postgres:5432/mylibrary
       NODE_ENV: production
       PORT: "3000"
+      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:-}
     volumes:
       - cover_uploads:/app/public/uploads
     depends_on:

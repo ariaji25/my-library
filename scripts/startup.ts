@@ -59,16 +59,34 @@ async function waitForDatabase() {
   }
 }
 
+function migrationDatabaseUrl(): string {
+  const direct = process.env.DIRECT_DATABASE_URL?.trim();
+  const pooled = process.env.DATABASE_URL?.trim();
+  const url = direct || pooled;
+  if (!url) throw new Error("DATABASE_URL is not set");
+  if (!direct && pooled?.includes(":6543")) {
+    throw new Error(
+      "Set DIRECT_DATABASE_URL (Supabase direct port 5432) for migrations — transaction pooler :6543 is not supported"
+    );
+  }
+  return url;
+}
+
 async function migrateWithRetry() {
   if (process.env.SKIP_MIGRATE === "true") {
     console.log("[startup] SKIP_MIGRATE=true — skipping migrations");
     return;
   }
 
+  const databaseUrl = migrationDatabaseUrl();
+
   for (let attempt = 1; attempt <= MIGRATE_RETRIES; attempt++) {
     try {
       console.log(`[startup] Running migrations (attempt ${attempt})…`);
-      execSync("npx prisma migrate deploy", { stdio: "inherit" });
+      execSync("npx prisma migrate deploy", {
+        stdio: "inherit",
+        env: { ...process.env, DATABASE_URL: databaseUrl },
+      });
       return;
     } catch (err) {
       if (attempt === MIGRATE_RETRIES) throw err;
@@ -105,6 +123,14 @@ function startNextServer() {
     env: process.env,
   });
 
+  const forwardSignal = (name: NodeJS.Signals) => {
+    console.log(`[startup] Received ${name}, shutting down Next.js…`);
+    if (!next.killed) next.kill(name);
+  };
+
+  process.on("SIGTERM", () => forwardSignal("SIGTERM"));
+  process.on("SIGINT", () => forwardSignal("SIGINT"));
+
   next.on("error", (err) => {
     console.error("[startup] Next.js process error:", err);
     process.exit(1);
@@ -112,7 +138,7 @@ function startNextServer() {
 
   next.on("exit", (code, signal) => {
     if (signal) {
-      console.error(`[startup] Next.js killed (${signal})`);
+      console.error(`[startup] Next.js exited (${signal})`);
       process.exit(1);
     }
     process.exit(code ?? 0);

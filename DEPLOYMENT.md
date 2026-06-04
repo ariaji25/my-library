@@ -162,6 +162,9 @@ npm run dev
 | Build fails on `migrate deploy` | Set `DATABASE_URL` for Production + Preview; or use Neon/Vercel Postgres integration |
 | `DATABASE_URL` at runtime | Same variable on project; redeploy after adding |
 | `P1000` auth failed on `localhost:5432` | Another Postgres may own port 5432; use `5433` in `.env` and `docker compose up -d postgres` (this repo maps `5433:5432`) |
+| `db:migrate` hangs or never finishes | `.env` points at **Supabase transaction pooler** (`:6543`). Use `DIRECT_DATABASE_URL` (port **5432** direct) for migrations, or local `localhost:5433` for dev |
+| `Failed to find Server Action "y"` | Old browser tab after redeploy, or missing `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`. Set the same key at **image build** time, rebuild, hard-refresh the site |
+| `npm error signal SIGTERM` on startup | Normal during container replace; ensure healthcheck passes and set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` before `docker compose build` |
 | Empty library after deploy | Run `npm run db:seed` once |
 | Prisma client not found | Build runs `prisma generate`; clear cache and redeploy |
 
@@ -169,7 +172,9 @@ npm run dev
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL URL (build + runtime) |
+| `DATABASE_URL` | Yes | PostgreSQL URL (build + runtime; pooled URL OK for app) |
+| `DIRECT_DATABASE_URL` | Supabase migrations | Direct Postgres URL (port 5432). Required for `db:migrate` when `DATABASE_URL` uses Supabase pooler `:6543` |
+| `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | Docker / multi-instance | `openssl rand -base64 32` — same value at **build** time (Docker `build.args`) and runtime |
 | `NODE_ENV` | Recommended | `production` on Vercel |
 | `ADMIN_EMAIL` | For login | Admin email (no database — env only) |
 | `ADMIN_PASSWORD` | For login | Admin password |
