@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" fill="none" role="img" aria-label="My Library">
+  <defs>
+    <linearGradient id="bg" x1="24" y1="12" x2="156" y2="168" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f9a8d4"/>
+      <stop offset="1" stop-color="#e879a9"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="url(#bg)"/>
+  <path
+    stroke="#fff"
+    stroke-width="9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M90 52v82"
+  />
+  <path
+    stroke="#fff"
+    stroke-width="9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M36 126a5 5 0 0 1-5-5V44a5 5 0 0 1 5-5h24a18 18 0 0 1 18 18 18 18 0 0 1 18-18h24a5 5 0 0 1 5 5v77a5 5 0 0 1-5 5H97a15 15 0 0 0-15 15 15 15 0 0 0-15-15z"
+  />
+</svg>
