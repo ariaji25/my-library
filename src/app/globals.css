@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fff5f9;
+  --foreground: #5c3d52;
+  --card: #fffbfd;
+  --card-foreground: #5c3d52;
+  --primary: #e879a9;
+  --primary-foreground: #ffffff;
+  --accent: #f0abfc;
+  --muted: #fce7f3;
+  --muted-foreground: #9d6b8a;
+  --border: #f5d0e8;
+  --ring: #f9a8d4;
+  --top-nav-height: 3.5rem; /* h-14 — matches top-nav */
+  --mobile-header-height: 3rem; /* h-12 */
+  --mobile-nav-height: 3.5rem; /* h-14 */
+}
+
+.dark {
+  --background: #1a1218;
+  --foreground: #fce7f3;
+  --card: #261c24;
+  --card-foreground: #fce7f3;
+  --primary: #f9a8d4;
+  --primary-foreground: #1a1218;
+  --accent: #e879f9;
+  --muted: #2d1f2a;
+  --muted-foreground: #c4a3b8;
+  --border: #3d2a38;
+  --ring: #f472b6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-nunito);
+  --font-heading: var(--font-cormorant);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-nunito), system-ui, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.font-heading {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Soft blush background pattern (light mode) */
+body:not(.dark) {
+  background-image: radial-gradient(
+      ellipse 80% 50% at 50% -20%,
+      rgba(249, 168, 212, 0.18),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 100%,
+      rgba(240, 171, 252, 0.12),
+      transparent
+    );
+}

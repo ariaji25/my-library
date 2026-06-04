@@ -1,0 +1,16 @@
+# Local PostgreSQL — matches Railway production
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: mylibrary
+      POSTGRES_PASSWORD: mylibrary
+      POSTGRES_DB: mylibrary
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

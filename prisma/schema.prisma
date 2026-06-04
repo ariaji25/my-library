@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BookStatus {
+  NOT_STARTED
+  READING
+  COMPLETED
+  WISHLIST
+}
+
+enum WishlistPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+model Book {
+  id            String     @id @default(uuid())
+  title         String
+  author        String
+  genre         String
+  publishedYear Int?
+  coverImage    String?
+  status        BookStatus @default(NOT_STARTED)
+  rating        Int?
+  review        String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  quotes        Quote[]
+  collections   CollectionBook[]
+}
+
+model Quote {
+  id      String @id @default(uuid())
+  bookId  String
+  content String
+  book    Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+}
+
+model Collection {
+  id          String           @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime         @default(now())
+  books       CollectionBook[]
+}
+
+model CollectionBook {
+  collectionId String
+  bookId       String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  book         Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, bookId])
+}
+
+model WishlistItem {
+  id        String           @id @default(uuid())
+  title     String
+  author    String
+  priority  WishlistPriority @default(MEDIUM)
+  notes     String?
+  createdAt DateTime         @default(now())
+}
