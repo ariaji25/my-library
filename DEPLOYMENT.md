@@ -42,13 +42,19 @@ Railway sets `PORT` automatically — the app listens on `0.0.0.0`.
 This repo includes `railway.json`:
 
 - **Build:** `npm run build` (runs `prisma generate` + Next.js build)
-- **Start:** `npm run start` — on every boot this will:
-  1. Run `prisma migrate deploy`
-  2. Run an **idempotent seed** (creates missing sample data only; never duplicates)
-  3. Start Next.js
-- **Health check:** `GET /api/health` (timeout 180s to allow migrate + seed on cold start)
+- **Pre-deploy:** `npx prisma migrate deploy` (runs before the container starts)
+- **Start:** `npm run start` — retries migrations if needed, starts Next.js, then seeds in the background
+- **Health check:** `GET /api/health` (300s timeout)
 
-You can confirm these under **Settings → Deploy** in the Railway dashboard. Remove any manual pre-deploy migrate command if you added one earlier — startup handles it.
+You can confirm these under **Settings → Deploy** in the Railway dashboard.
+
+**Required variable on the app service:**
+
+```
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+```
+
+If healthchecks fail, `DATABASE_URL` is usually missing or on the wrong service.
 
 ## 5. Deploy
 
@@ -109,10 +115,11 @@ npm run dev
 | Issue | Fix |
 |-------|-----|
 | Build fails on Prisma | Ensure `postinstall` runs; check build logs for `prisma generate` |
-| `Can't reach database` on migrate | Confirm `DATABASE_URL` references Postgres; pre-deploy runs with private network |
-| App crashes on start | Check logs; verify `DATABASE_URL` is set on the **app** service |
-| Empty library after deploy | Check startup logs; DB may still be connecting. Or run `npm run db:seed` |
-| Startup slow | Normal on first boot (migrate + seed); health check allows 180s |
+| Healthcheck `service unavailable` | Set `DATABASE_URL` on the **app** service; redeploy after linking Postgres |
+| `Can't reach database` on migrate | Postgres still starting — startup retries 12×; check Postgres plugin is running |
+| App crashes on start | Deploy logs → look for `[startup] Fatal` or missing `DATABASE_URL` |
+| Empty library after deploy | Wait for background seed in logs, or `railway run npm run db:seed` |
+| Duplicate migrate | Set `SKIP_MIGRATE=true` on app if pre-deploy already migrates |
 | Health check fails | Wait for cold start; path is `/api/health` |
 
 ## Environment variables
