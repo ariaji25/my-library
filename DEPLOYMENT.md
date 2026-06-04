@@ -1,90 +1,96 @@
 # Deploy My Library
 
-Deployment uses the **Dockerfile** in this repo. Railway (or any Docker host) builds and runs that image — no Nixpacks build/start commands required.
+## Vercel (recommended)
 
-## Prerequisites
+### Fix: `inject-built-with-v0.mjs` error
 
-- [Railway account](https://railway.com) or any host that runs Docker
-- [Docker](https://docs.docker.com/get-docker/) (for local production-like runs)
+This error is **not from this repo**. It happens when the Vercel project was linked to **v0** and injects a broken `NODE_OPTIONS` variable.
+
+**Fix in Vercel Dashboard:**
+
+1. Open your project → **Settings** → **Environment Variables**
+2. Find **`NODE_OPTIONS`** (if present) — it may look like:
+   ```
+   --import /vercel/path0/.v0/inject-built-with-v0.mjs
+   ```
+3. **Delete** that variable (all environments)
+4. **Redeploy** with “Clear build cache” enabled
+
+Also check **Settings → General** and disconnect / remove v0 integration if the project was created from v0.dev but you deploy this Git repo instead.
 
 ---
 
-## Railway (Dockerfile)
+### 1. Create Vercel project
 
-### 1. Create project + Postgres
+1. [vercel.com/new](https://vercel.com/new) → import this Git repository
+2. Framework: **Next.js** (auto-detected)
+3. Root directory: `.` (repo root)
 
-1. [railway.com/new](https://railway.com/new) → **Deploy from GitHub** → select this repo  
-2. **+ New** → **Database** → **PostgreSQL**
+Build settings come from `vercel.json`:
 
-Railway detects `Dockerfile` automatically (`railway.json` sets `builder: DOCKERFILE`).
+- **Install:** `npm install`
+- **Build:** `npm run vercel-build` (`prisma generate` → `migrate deploy` → `next build`)
 
-### 2. App service variables
+### 2. Add PostgreSQL
 
-On the **app** service (not Postgres):
+Use one of:
+
+- **Vercel Postgres** — Storage → Create Database → Postgres
+- **Neon** — [neon.tech](https://neon.tech) → connect integration to Vercel
+- **Supabase** — connection string in env vars
+
+### 3. Environment variables
+
+On the **project** (all environments you deploy):
 
 | Name | Value |
 |------|--------|
-| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+| `DATABASE_URL` | Postgres connection string (pooled URL if provider offers one) |
 | `NODE_ENV` | `production` |
 
-Replace `Postgres` with your database service name if different.
+**Do not set** `NODE_OPTIONS` unless you know you need it.
 
-### 3. Deploy settings (optional)
-
-In **Settings → Deploy**, clear custom **Build** / **Start** / **Pre-deploy** commands so the Dockerfile and `CMD` control the app.
-
-`railway.json` only sets the healthcheck path (`/api/health`). The image also defines a Docker `HEALTHCHECK`.
+`DATABASE_URL` must be available at **build time** too (for `prisma migrate deploy` in `vercel-build`).
 
 ### 4. Deploy
 
-Push to `main` or run:
+Push to `main` or click **Deploy**. After the first successful deploy, seed sample data once:
 
 ```bash
-railway up
+npx vercel env pull .env.local
+npx tsx prisma/seed.ts
 ```
 
-### 5. What happens on container start
+Or from Vercel dashboard → project → **⋯** → **Open in Terminal** → `npm run db:seed`
 
-`CMD npm run start` → `scripts/startup.ts`:
-
-1. Starts Next.js immediately (healthcheck can pass)
-2. In the background: wait for Postgres → `prisma migrate deploy` → idempotent seed
-
-Optional:
+### 5. Optional env vars
 
 | Variable | Effect |
 |----------|--------|
-| `SEED_DATABASE=true` | Wipe all data, then seed |
-| `SKIP_MIGRATE=true` | Skip migrations at startup |
-
-### 6. Public URL
-
-App service → **Settings → Networking** → **Generate domain**
+| `SEED_DATABASE=true` | Not used on Vercel build; use `db:seed` manually |
+| `SKIP_MIGRATE=true` | Change `vercel-build` to `prisma generate && next build` if migrations run elsewhere |
 
 ---
 
-## Local Docker (production image)
+## Docker / Railway
+
+See previous sections below for Docker Compose and Railway Dockerfile deploy.
+
+### Railway
+
+- Uses `Dockerfile` + `railway.json`
+- `DATABASE_URL=${{Postgres.DATABASE_URL}}`
+- Start command: `npm run start` (custom startup script)
+
+### Local Docker
 
 ```bash
 docker compose up --build
 ```
 
-- Postgres: internal only  
-- App: [http://localhost:3000](http://localhost:3000)  
-- Health: [http://localhost:3000/api/health](http://localhost:3000/api/health)
-
-Build image only:
-
-```bash
-docker build -t my-library .
-docker run --rm -p 3000:3000 \
-  -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
-  my-library
-```
-
 ---
 
-## Local development (no Docker app)
+## Local development
 
 ```bash
 docker compose up -d postgres
@@ -101,18 +107,17 @@ npm run dev
 
 | Issue | Fix |
 |-------|-----|
-| Railway still uses Nixpacks | Ensure `Dockerfile` exists; set builder to **Dockerfile** in service settings |
-| Healthcheck fails | Confirm `DATABASE_URL` on app service; check logs for `[startup] Starting Next.js` |
-| Build fails at `prisma generate` | Check Dockerfile build logs; schema must be valid |
-| Empty library | Wait for `[startup] Database setup complete` in logs, or `railway run npm run db:seed` |
-| `DATABASE_URL is missing` | Link Postgres variable on the **app** service |
+| `inject-built-with-v0.mjs` | Remove `NODE_OPTIONS` from Vercel env (see above) |
+| Build fails on `migrate deploy` | Set `DATABASE_URL` for Production + Preview; or use Neon/Vercel Postgres integration |
+| `DATABASE_URL` at runtime | Same variable on project; redeploy after adding |
+| Empty library after deploy | Run `npm run db:seed` once |
+| Prisma client not found | Build runs `prisma generate`; clear cache and redeploy |
 
 ## Environment variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `PORT` | Auto | Set by Railway / Docker (`3000` default) |
-| `NODE_ENV` | Recommended | `production` |
+| `DATABASE_URL` | Yes | PostgreSQL URL (build + runtime) |
+| `NODE_ENV` | Recommended | `production` on Vercel |
 
 See [.env.example](./.env.example).

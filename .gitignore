@@ -39,6 +39,10 @@ yarn-error.log*
 
 # vercel
 .vercel
+.v0
+
+# v0 inject (never commit — Vercel may inject via NODE_OPTIONS instead)
+**/.v0/
 
 # typescript
 *.tsbuildinfo

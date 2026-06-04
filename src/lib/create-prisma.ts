@@ -3,7 +3,7 @@ import { Pool } from "pg";
 import { PrismaClient } from "../generated/prisma/client";
 
 /**
- * Prisma client for PostgreSQL (Railway, Docker, or any postgres:// URL).
+ * Prisma client for PostgreSQL (Vercel, Railway, Docker, or any postgres:// URL).
  */
 export function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL;
@@ -11,12 +11,18 @@ export function createPrismaClient(): PrismaClient {
   if (!url?.startsWith("postgres://") && !url?.startsWith("postgresql://")) {
     throw new Error(
       "DATABASE_URL must be a PostgreSQL connection string (postgres:// or postgresql://). " +
-        "For local dev: docker compose up -d and copy .env.example. " +
-        "On Railway: set DATABASE_URL=${{Postgres.DATABASE_URL}}"
+        "On Vercel: add Postgres storage and set DATABASE_URL on the project."
     );
   }
 
-  const pool = new Pool({ connectionString: url });
+  // Serverless (Vercel): keep pool small to avoid exhausting DB connections
+  const pool = new Pool({
+    connectionString: url,
+    max: process.env.VERCEL ? 1 : 10,
+    idleTimeoutMillis: 20_000,
+    connectionTimeoutMillis: 10_000,
+  });
+
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 }

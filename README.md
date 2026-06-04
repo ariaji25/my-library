@@ -48,13 +48,14 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Deploy
 
-Uses **Docker** (`Dockerfile`). See **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+**Vercel** (recommended) or **Docker/Railway**. See **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
 ```bash
+# Vercel: import repo, add Postgres, set DATABASE_URL, deploy
+# If you see inject-built-with-v0.mjs — delete NODE_OPTIONS in Vercel env vars
+
 # Local production-like stack
 docker compose up --build
-
-# Railway: connect repo + Postgres, set DATABASE_URL on app service, deploy
 ```
 
 ## Project structure
