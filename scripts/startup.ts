@@ -1,12 +1,62 @@
 import { execSync, spawn } from "node:child_process";
+import { Client } from "pg";
 import { createPrismaClient } from "../src/lib/create-prisma";
 import { formatSeedResult, seedDatabase } from "../prisma/seed-data";
 
 const MIGRATE_RETRIES = 12;
 const MIGRATE_RETRY_MS = 5000;
 
+const DB_READY_TIMEOUT_MS = 90_000;
+const DB_READY_INITIAL_DELAY_MS = 2_000;
+const DB_READY_MAX_DELAY_MS = 30_000;
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForDatabase() {
+  const deadline = Date.now() + DB_READY_TIMEOUT_MS;
+  let delay = DB_READY_INITIAL_DELAY_MS;
+  let attempt = 0;
+
+  console.log("[startup] Waiting for Postgres to be ready…");
+
+  while (true) {
+    attempt++;
+    const client = new Client({ connectionString: process.env.DATABASE_URL });
+    try {
+      await client.connect();
+      await client.query("SELECT 1");
+      await client.end();
+      console.log(
+        `[startup] Postgres is ready (attempt ${attempt})`
+      );
+      return;
+    } catch (err) {
+      try {
+        await client.end();
+      } catch {
+        // ignore cleanup errors
+      }
+
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        throw new Error(
+          `[startup] Postgres did not become ready within ${DB_READY_TIMEOUT_MS / 1000}s. ` +
+            `Last error: ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
+
+      const wait = Math.min(delay, remaining);
+      console.warn(
+        `[startup] Postgres not ready (attempt ${attempt}), retrying in ${wait / 1000}s… ` +
+          `(${Math.ceil(remaining / 1000)}s remaining) — ${err instanceof Error ? err.message : String(err)}`
+      );
+      await sleep(wait);
+      // Exponential backoff, capped at DB_READY_MAX_DELAY_MS
+      delay = Math.min(delay * 2, DB_READY_MAX_DELAY_MS);
+    }
+  }
 }
 
 async function migrateWithRetry() {
@@ -83,6 +133,7 @@ async function main() {
     process.exit(1);
   }
 
+  await waitForDatabase();
   await migrateWithRetry();
   startNextServer();
 
