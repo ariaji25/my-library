@@ -17,12 +17,11 @@ services:
       retries: 10
 
   app:
-    #build:
-     # context: .
-      #dockerfile: Dockerfile
-      #args:
-       # NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:-}
-    image: ghcr.io/ariaji25/my-library:03c7e3f
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:?Set NEXT_SERVER_ACTIONS_ENCRYPTION_KEY in .env}
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -32,7 +31,8 @@ services:
       DATABASE_URL: postgresql://mylibrary:mylibrary@postgres:5432/mylibrary
       NODE_ENV: production
       PORT: "3000"
-      ADMIN_EMAIL: ${ADMIN_EMAUL:-}
+      COOKIE_SECURE: "false"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:-}
     volumes:

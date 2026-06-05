@@ -52,6 +52,30 @@ export function verifyCredentials(email: string, password: string): boolean {
   );
 }
 
+/** Browser-safe origin — Docker/Next bind to 0.0.0.0, which must not appear in redirects. */
+export function requestOrigin(request: Request): string {
+  const host =
+    request.headers.get("x-forwarded-host")?.split(",")[0].trim() ||
+    request.headers.get("host")?.trim();
+  if (host && host !== "0.0.0.0" && !host.startsWith("0.0.0.0:")) {
+    const proto =
+      request.headers.get("x-forwarded-proto")?.split(",")[0].trim() ||
+      "http";
+    return `${proto}://${host}`;
+  }
+  try {
+    const url = new URL(request.url);
+    if (url.hostname !== "0.0.0.0") return url.origin;
+  } catch {
+    // fall through
+  }
+  return "http://localhost:3000";
+}
+
+export function requestRedirectUrl(path: string, request: Request): URL {
+  return new URL(path, requestOrigin(request));
+}
+
 /** HTTPS behind reverse proxy (SwiftWave/Railway) or explicit COOKIE_SECURE=false for HTTP. */
 export function cookieSecureFromRequest(request: Request): boolean {
   if (process.env.COOKIE_SECURE === "false") return false;

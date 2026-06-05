@@ -3,6 +3,7 @@ import {
   cookieSecureFromRequest,
   createSessionToken,
   isAuthEnabled,
+  requestRedirectUrl,
   SESSION_COOKIE,
   sessionCookieOptions,
   verifyCredentials,
@@ -10,7 +11,7 @@ import {
 
 export async function POST(request: Request) {
   if (!isAuthEnabled()) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(requestRedirectUrl("/", request));
   }
 
   const formData = await request.formData();
@@ -24,12 +25,12 @@ export async function POST(request: Request) {
     const params = new URLSearchParams({ error: "invalid" });
     params.set("next", next);
     return NextResponse.redirect(
-      new URL(`/login?${params.toString()}`, request.url)
+      requestRedirectUrl(`/login?${params.toString()}`, request)
     );
   }
 
   const token = await createSessionToken();
-  const response = NextResponse.redirect(new URL(next, request.url));
+  const response = NextResponse.redirect(requestRedirectUrl(next, request));
   response.cookies.set(
     SESSION_COOKIE,
     token,

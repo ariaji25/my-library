@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+
+// Auth env vars exist only at runtime — must not prerender redirect to "/" at build.
+export const dynamic = "force-dynamic";
 import { BookMarked } from "lucide-react";
 import { APP_NAME } from "@/lib/constants";
 import { isAuthEnabled, SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
