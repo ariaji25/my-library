@@ -1,6 +1,5 @@
 # Arinda's Library
 
-
 A personal digital bookshelf to manage your book collection, track reading progress, save wishlists, and document reviews and favorite quotes.
 
 ## Features (MVP)
