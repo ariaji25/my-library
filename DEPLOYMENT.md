@@ -153,7 +153,7 @@ node node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.json scripts/startup.ts
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Optional login |
 | `PORT` | Usually `3000` (SwiftWave may inject this) |
 
-**GHCR builds:** add GitHub repo secret `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (`openssl rand -base64 32`), then set the same value in SwiftWave env vars and redeploy.
+**GHCR builds:** add `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` to the GitHub **Production** environment (`openssl rand -base64 32`). The Docker workflow passes it at **build** time and bakes it into the image for **runtime** (Next.js generates a new random key in Docker without it). Optionally set the same value in SwiftWave env vars to override without rebuilding.
 
 **Custom health check** (Deployment Configuration → Custom Health Check):
 
@@ -210,10 +210,11 @@ npm run dev
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL URL (build + runtime; pooled URL OK for app) |
 | `DIRECT_DATABASE_URL` | Supabase migrations | Direct Postgres URL (port 5432). Required for `db:migrate` when `DATABASE_URL` uses Supabase pooler `:6543` |
-| `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | Docker / multi-instance | `openssl rand -base64 32` — same value at **build** time (Docker `build.args`) and runtime |
+| `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | Docker / multi-instance | `openssl rand -base64 32` — GitHub **Production** environment secret for GHCR builds; must match at build **and** runtime (Dockerfile embeds it from the build arg; Next.js ignores disk cache inside containers) |
 | `NODE_ENV` | Recommended | `production` on Vercel |
-| `ADMIN_EMAIL` | For login | Admin email (no database — env only) |
+| `ADMIN_EMAIL` | For login | Admin email (no database — env only); both required to enable login |
 | `ADMIN_PASSWORD` | For login | Admin password |
+| `COOKIE_SECURE` | HTTP-only deploy | Set to `false` if the site has no HTTPS (cookies use `Secure` in production by default) |
 
 ### Admin login (email + password)
 

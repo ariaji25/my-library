@@ -27,6 +27,10 @@ RUN npx prisma generate && npm run build
 
 # --- production ---
 FROM base AS runner
+# Re-declare so the build arg is available in this stage (required at runtime in Docker:
+# Next.js treats container FS as ephemeral and generates a random key without this).
+ARG NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
+ENV NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY}
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000

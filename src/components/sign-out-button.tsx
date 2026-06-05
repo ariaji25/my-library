@@ -1,12 +1,11 @@
 "use client";
 
 import { LogOut } from "lucide-react";
-import { logout } from "@/lib/auth-actions";
 import { Button } from "@/components/ui/button";
 
 export function SignOutButton({ className }: { className?: string }) {
   return (
-    <form action={logout}>
+    <form action="/api/auth/logout" method="POST">
       <Button
         type="submit"
         variant="ghost"

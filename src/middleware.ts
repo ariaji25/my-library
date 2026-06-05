@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isAuthEnabled, SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 
-const PUBLIC_PATHS = ["/login", "/api/health", "/api/books/search"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/api/health",
+  "/api/books/search",
+  "/api/auth/login",
+  "/api/auth/logout",
+];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(

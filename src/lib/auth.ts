@@ -23,25 +23,48 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+function adminEmail(): string | undefined {
+  return process.env.ADMIN_EMAIL?.trim() || undefined;
+}
+
+function adminPassword(): string | undefined {
+  return process.env.ADMIN_PASSWORD?.trim() || undefined;
+}
+
 export function isAuthEnabled(): boolean {
-  return Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD);
+  return Boolean(adminEmail() && adminPassword());
 }
 
 function sessionSigningKey(): string | undefined {
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
+  const email = adminEmail();
+  const password = adminPassword();
   if (!email || !password) return undefined;
   return `${email}:${password}`;
 }
 
 export function verifyCredentials(email: string, password: string): boolean {
-  const expectedEmail = process.env.ADMIN_EMAIL;
-  const expectedPass = process.env.ADMIN_PASSWORD;
+  const expectedEmail = adminEmail();
+  const expectedPass = adminPassword();
   if (!expectedEmail || !expectedPass) return false;
   return (
     safeEqual(normalizeEmail(email), normalizeEmail(expectedEmail)) &&
     safeEqual(password, expectedPass)
   );
+}
+
+/** HTTPS behind reverse proxy (SwiftWave/Railway) or explicit COOKIE_SECURE=false for HTTP. */
+export function cookieSecureFromRequest(request: Request): boolean {
+  if (process.env.COOKIE_SECURE === "false") return false;
+  if (process.env.NODE_ENV !== "production") return false;
+  const proto = request.headers.get("x-forwarded-proto");
+  if (proto) {
+    return proto.split(",")[0].trim().toLowerCase() === "https";
+  }
+  try {
+    return new URL(request.url).protocol === "https:";
+  } catch {
+    return true;
+  }
 }
 
 async function hmacSign(message: string, secret: string): Promise<string> {
@@ -82,10 +105,14 @@ export async function verifySessionToken(token: string | undefined): Promise<boo
   return validSig && notExpired;
 }
 
-export function sessionCookieOptions() {
+export function sessionCookieOptions(secure?: boolean) {
+  const useSecure =
+    secure ??
+    (process.env.NODE_ENV === "production" &&
+      process.env.COOKIE_SECURE !== "false");
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecure,
     sameSite: "lax" as const,
     path: "/",
     maxAge: SESSION_MAX_AGE_SEC,

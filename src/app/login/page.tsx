@@ -2,7 +2,6 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { BookMarked } from "lucide-react";
-import { login } from "@/lib/auth-actions";
 import { APP_NAME } from "@/lib/constants";
 import { isAuthEnabled, SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,7 @@ export default async function LoginPage({
           <CardDescription>Sign in to continue</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={login} className="space-y-4">
+          <form action="/api/auth/login" method="POST" className="space-y-4">
             <input type="hidden" name="next" value={next} />
             {showError && (
               <p

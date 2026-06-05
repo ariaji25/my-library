@@ -24,6 +24,14 @@ jobs:
       packages: write
 
     steps:
+      - name: Require Server Actions encryption key
+        if: github.event_name != 'pull_request'
+        run: |
+          if [ -z "${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}" ]; then
+            echo "::error::Set NEXT_SERVER_ACTIONS_ENCRYPTION_KEY in the Production environment (Settings → Environments → Production → Secrets)."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 
