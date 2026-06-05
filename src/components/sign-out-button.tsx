@@ -11,10 +11,10 @@ export function SignOutButton({ className }: { className?: string }) {
         variant="ghost"
         size="sm"
         className={className}
-        aria-label="Sign out"
+        aria-label="Keluar"
       >
         <LogOut className="h-4 w-4" />
-        <span className="hidden sm:inline">Sign out</span>
+        <span className="hidden sm:inline">Keluar</span>
       </Button>
     </form>
   );

@@ -28,9 +28,9 @@ export function LibraryFilters({ genres, authors }: Props) {
     <div className="flex flex-col gap-3 sm:gap-4">
       <div className="space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Filter your collection
+          Filter koleksimu
         </p>
-        <SearchInput placeholder="Search your books…" />
+        <SearchInput placeholder="Cari bukumu…" />
       </div>
 
       <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap sm:gap-2">
@@ -38,7 +38,7 @@ export function LibraryFilters({ genres, authors }: Props) {
           className={selectClass}
           defaultValue={params.get("sort") ?? "created-desc"}
           onChange={(e) => update("sort", e.target.value)}
-          aria-label="Sort by"
+          aria-label="Urutkan"
         >
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -51,9 +51,9 @@ export function LibraryFilters({ genres, authors }: Props) {
           className={selectClass}
           defaultValue={params.get("genre") ?? ""}
           onChange={(e) => update("genre", e.target.value)}
-          aria-label="Filter by genre"
+          aria-label="Filter genre"
         >
-          <option value="">All genres</option>
+          <option value="">Semua genre</option>
           {genres.map((g) => (
             <option key={g} value={g}>
               {g}
@@ -65,9 +65,9 @@ export function LibraryFilters({ genres, authors }: Props) {
           className={selectClass}
           defaultValue={params.get("status") ?? ""}
           onChange={(e) => update("status", e.target.value)}
-          aria-label="Filter by status"
+          aria-label="Filter status"
         >
-          <option value="">All statuses</option>
+          <option value="">Semua status</option>
           {BOOK_STATUSES.map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
@@ -79,12 +79,12 @@ export function LibraryFilters({ genres, authors }: Props) {
           className={cn(selectClass, "min-[420px]:col-span-2 sm:col-span-1")}
           defaultValue={params.get("rating") ?? ""}
           onChange={(e) => update("rating", e.target.value)}
-          aria-label="Filter by rating"
+          aria-label="Filter rating"
         >
-          <option value="">All ratings</option>
+          <option value="">Semua rating</option>
           {[5, 4, 3, 2, 1].map((r) => (
             <option key={r} value={String(r)}>
-              {r} stars
+              {r} bintang
             </option>
           ))}
         </select>
@@ -93,9 +93,9 @@ export function LibraryFilters({ genres, authors }: Props) {
           className={cn(selectClass, "sm:min-w-[10rem]")}
           defaultValue={params.get("author") ?? ""}
           onChange={(e) => update("author", e.target.value)}
-          aria-label="Filter by author"
+          aria-label="Filter penulis"
         >
-          <option value="">All authors</option>
+          <option value="">Semua penulis</option>
           {authors.map((a) => (
             <option key={a} value={a}>
               {a}

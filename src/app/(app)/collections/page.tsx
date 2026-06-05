@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FolderOpen, Plus } from "lucide-react";
 import { getCollections } from "@/lib/queries";
 import { createCollection } from "@/lib/actions";
+import { bookCountLabel } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +15,11 @@ export default async function CollectionsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-heading text-2xl font-semibold sm:text-3xl">Collections</h1>
+        <h1 className="font-heading text-2xl font-semibold sm:text-3xl">
+          Koleksi
+        </h1>
         <p className="mt-0.5 text-sm text-muted-foreground sm:mt-1 sm:text-base">
-          Curated groups of books from your library
+          Kelompok buku pilihan dari perpustakaanmu
         </p>
       </div>
 
@@ -24,32 +27,32 @@ export default async function CollectionsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            New collection
+            Koleksi baru
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form action={createCollection} className="space-y-4 max-w-md">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">Nama *</Label>
               <Input
                 id="name"
                 name="name"
                 required
-                placeholder="Best Books of 2026"
+                placeholder="Buku terbaik 2026"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Deskripsi</Label>
               <Textarea id="description" name="description" rows={2} />
             </div>
-            <Button type="submit">Create collection</Button>
+            <Button type="submit">Buat koleksi</Button>
           </form>
         </CardContent>
       </Card>
 
       {collections.length === 0 ? (
         <p className="py-12 text-center text-muted-foreground">
-          No collections yet. Create one to group your favorite reads.
+          Belum ada koleksi. Buat satu untuk mengelompokkan bacaan favoritmu.
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -67,7 +70,7 @@ export default async function CollectionsPage() {
                         </p>
                       )}
                       <p className="mt-3 text-xs text-muted-foreground">
-                        {col.books.length} book{col.books.length !== 1 ? "s" : ""}
+                        {bookCountLabel(col.books.length)}
                       </p>
                     </div>
                   </div>

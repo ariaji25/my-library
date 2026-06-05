@@ -54,8 +54,8 @@ export function AddBookForm({ action, defaults }: Props) {
   return (
     <div className="space-y-6">
       <BookSearchAutocomplete
-        label="Look up a book"
-        placeholder="Search title or author to autofill…"
+        label="Cari buku"
+        placeholder="Cari judul atau penulis untuk mengisi otomatis…"
         onSelect={applySearchHit}
       />
 
@@ -66,7 +66,7 @@ export function AddBookForm({ action, defaults }: Props) {
         className="space-y-4"
       >
         <div className="space-y-2">
-          <Label htmlFor="title">Title *</Label>
+          <Label htmlFor="title">Judul *</Label>
           <Input
             id="title"
             name="title"
@@ -75,7 +75,7 @@ export function AddBookForm({ action, defaults }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="author">Author *</Label>
+          <Label htmlFor="author">Penulis *</Label>
           <Input
             id="author"
             name="author"
@@ -89,12 +89,12 @@ export function AddBookForm({ action, defaults }: Props) {
             id="genre"
             name="genre"
             required
-            placeholder="Fiction"
+            placeholder="Fiksi"
             defaultValue={defaults?.genre}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="publishedYear">Year published</Label>
+          <Label htmlFor="publishedYear">Tahun terbit</Label>
           <Input
             id="publishedYear"
             name="publishedYear"
@@ -121,7 +121,7 @@ export function AddBookForm({ action, defaults }: Props) {
           </select>
         </div>
         <Button type="submit" className="w-full">
-          Save book
+          Simpan buku
         </Button>
       </form>
     </div>

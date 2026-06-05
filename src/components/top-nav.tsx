@@ -35,7 +35,7 @@ export function TopNav({ showSignOut = false }: { showSignOut?: boolean }) {
 
         <nav
           className="flex items-center gap-0.5"
-          aria-label="Main navigation"
+          aria-label="Navigasi utama"
         >
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = isNavActive(pathname, href);

@@ -18,8 +18,8 @@ type Props = {
 
 export function BookSearchAutocomplete({
   onSelect,
-  label = "Search books",
-  placeholder = "Title or author…",
+  label = "Cari buku",
+  placeholder = "Judul atau penulis…",
   className,
 }: Props) {
   const listId = useId();
@@ -57,7 +57,7 @@ export function BookSearchAutocomplete({
 
       if (!res.ok) {
         setResults([]);
-        setError(data.error ?? "Search failed");
+        setError(data.error ?? "Pencarian gagal");
         return;
       }
 
@@ -66,7 +66,7 @@ export function BookSearchAutocomplete({
     } catch {
       if (requestId !== requestIdRef.current) return;
       setResults([]);
-      setError("Search failed");
+      setError("Pencarian gagal");
     } finally {
       if (requestId === requestIdRef.current) {
         setLoading(false);
@@ -179,7 +179,7 @@ export function BookSearchAutocomplete({
             )}
             {!error && !loading && results.length === 0 && (
               <li className="px-3 py-2 text-sm text-muted-foreground">
-                No books found
+                Buku tidak ditemukan
               </li>
             )}
             {results.map((book, index) => (
@@ -224,7 +224,7 @@ export function BookSearchAutocomplete({
         )}
       </div>
       <p className="text-xs text-muted-foreground">
-        Open Library — select a book to autofill the add form
+        Open Library — pilih buku untuk mengisi formulir otomatis
       </p>
     </div>
   );

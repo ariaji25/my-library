@@ -60,9 +60,9 @@ function sanitizeFilename(name: string): string {
 
 function pagesLine(pagesRead: number, totalPages: number | null): string {
   if (totalPages && totalPages > 0) {
-    return `${pagesRead} / ${totalPages} pages`;
+    return `${pagesRead} / ${totalPages} halaman`;
   }
-  return `${pagesRead} pages`;
+  return `${pagesRead} halaman`;
 }
 
 function buildLines(

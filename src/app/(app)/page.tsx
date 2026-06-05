@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { format } from "date-fns";
 import {
   BookCheck,
   BookOpen,
@@ -9,6 +8,7 @@ import {
   Quote,
 } from "lucide-react";
 import { getDashboardStats } from "@/lib/queries";
+import { formatAppDate } from "@/lib/format";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -23,21 +23,21 @@ export default async function DashboardPage() {
     <div className="space-y-6 sm:space-y-8">
       <section className="rounded-2xl border border-border/80 bg-gradient-to-br from-card via-card to-primary/10 p-5 shadow-sm shadow-primary/10 sm:p-8 md:p-10">
         <p className="text-xs font-semibold uppercase tracking-wider text-primary sm:text-sm">
-          Welcome back ✨
+          Selamat datang kembali ✨
         </p>
         <h1 className="font-heading mt-2 text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">
-          Your cozy reading nook
+          Sudut baca favoritmu
         </h1>
         <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:mt-3 sm:text-base">
-          Track what you read, save what you love, and revisit the ideas that
-          stayed with you.
+          Lacak apa yang kamu baca, simpan yang kamu suka, dan kunjungi lagi
+          ide-ide yang menetap bersamamu.
         </p>
         <Link
           href="/library/new"
           className="mt-5 inline-flex h-9 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:mt-6"
         >
           <BookPlus className="h-4 w-4" />
-          Add a book
+          Tambah buku
         </Link>
       </section>
 
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Quote className="h-5 w-5 text-primary" />
-              Quote of the day
+              Kutipan hari ini
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
               {stats.quoteOfTheDay.book.title} ·{" "}
               {stats.quoteOfTheDay.book.author}
               {" · "}
-              {format(stats.quoteOfTheDay.date, "MMM d, yyyy")}
+              {formatAppDate(stats.quoteOfTheDay.date)}
             </Link>
           </CardContent>
         </Card>
@@ -69,16 +69,16 @@ export default async function DashboardPage() {
       <ReadingActivityDashboard {...stats.readingActivity} />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
-        <StatCard label="Total Books" value={stats.total} icon={Library} />
-        <StatCard label="Read" value={stats.read} icon={BookCheck} />
+        <StatCard label="Total buku" value={stats.total} icon={Library} />
+        <StatCard label="Selesai" value={stats.read} icon={BookCheck} />
         <StatCard
-          label="Currently Reading"
+          label="Sedang dibaca"
           value={stats.reading}
           icon={BookOpen}
         />
-        <StatCard label="Unread" value={stats.unread} icon={BookPlus} />
+        <StatCard label="Belum dibaca" value={stats.unread} icon={BookPlus} />
         <StatCard
-          label="Wishlist"
+          label="Daftar keinginan"
           value={stats.wishlistBooks + stats.wishlistCount}
           icon={Bookmark}
         />
@@ -87,21 +87,21 @@ export default async function DashboardPage() {
       <Card>
         <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardTitle>Weekly progress</CardTitle>
+            <CardTitle>Progres mingguan</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Books started and finished over the last 12 weeks
+              Buku yang dimulai dan diselesaikan dalam 12 minggu terakhir
             </p>
           </div>
           {stats.currentWeek && (
             <div className="flex gap-6 text-sm tabular-nums">
               <div>
-                <span className="text-muted-foreground">This week finished</span>
+                <span className="text-muted-foreground">Selesai minggu ini</span>
                 <p className="text-2xl font-semibold">
                   {stats.currentWeek.completed}
                 </p>
               </div>
               <div>
-                <span className="text-muted-foreground">This week started</span>
+                <span className="text-muted-foreground">Dimulai minggu ini</span>
                 <p className="text-2xl font-semibold">
                   {stats.currentWeek.started}
                 </p>
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Reading progress</CardTitle>
+            <CardTitle>Progres membaca</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-end justify-between">
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
                 {stats.completedPct}%
               </span>
               <span className="text-sm text-muted-foreground">
-                {stats.read} of {stats.total} completed
+                {stats.read} dari {stats.total} selesai
               </span>
             </div>
             <Progress value={stats.completedPct} className="h-3" />
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Genre distribution</CardTitle>
+            <CardTitle>Distribusi genre</CardTitle>
           </CardHeader>
           <CardContent>
             <GenreChart data={stats.genreDistribution} />
@@ -144,12 +144,12 @@ export default async function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent activity</CardTitle>
+          <CardTitle>Aktivitas terbaru</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-5 sm:gap-6 md:grid-cols-3">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Last added
+              Terakhir ditambahkan
             </p>
             {stats.lastAdded ? (
               <Link
@@ -159,16 +159,18 @@ export default async function DashboardPage() {
                 <p className="font-medium">{stats.lastAdded.title}</p>
                 <p className="text-sm text-muted-foreground">
                   {stats.lastAdded.author} ·{" "}
-                  {format(stats.lastAdded.createdAt, "MMM d, yyyy")}
+                  {formatAppDate(stats.lastAdded.createdAt)}
                 </p>
               </Link>
             ) : (
-              <p className="mt-2 text-sm text-muted-foreground">No books yet</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Belum ada buku
+              </p>
             )}
           </div>
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Last finished
+              Terakhir selesai
             </p>
             {stats.lastCompleted ? (
               <Link
@@ -179,18 +181,18 @@ export default async function DashboardPage() {
                 <p className="text-sm text-muted-foreground">
                   {stats.lastCompleted.author}
                   {stats.lastCompleted.completedAt &&
-                    ` · ${format(stats.lastCompleted.completedAt, "MMM d, yyyy")}`}
+                    ` · ${formatAppDate(stats.lastCompleted.completedAt)}`}
                 </p>
               </Link>
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">
-                No completed books yet
+                Belum ada buku yang selesai
               </p>
             )}
           </div>
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Latest review
+              Ulasan terbaru
             </p>
             {stats.latestReview?.review ? (
               <Link
@@ -203,7 +205,9 @@ export default async function DashboardPage() {
                 </p>
               </Link>
             ) : (
-              <p className="mt-2 text-sm text-muted-foreground">No reviews yet</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Belum ada ulasan
+              </p>
             )}
           </div>
         </CardContent>

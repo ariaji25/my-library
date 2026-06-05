@@ -33,7 +33,7 @@ export function ReadingActivityMonthlyChart({
             : "py-8 text-center text-sm text-muted-foreground"
         }
       >
-        Log reading sessions on your books to see monthly activity.
+        Catat sesi baca di bukumu untuk melihat aktivitas bulanan.
       </p>
     );
   }
@@ -74,7 +74,7 @@ export function ReadingActivityMonthlyChart({
           allowDecimals={false}
           tick={{ fontSize: tickSize }}
           width={compact ? 28 : 36}
-          tickFormatter={(v) => `${v}h`}
+          tickFormatter={(v) => `${v}j`}
         />
         <Tooltip
           contentStyle={{
@@ -85,9 +85,9 @@ export function ReadingActivityMonthlyChart({
           formatter={(value, name, item) => {
             const payload = item.payload as { minutes: number; activeDays: number };
             if (name === "hours") {
-              return [formatReadingDuration(payload.minutes), "Reading time"];
+              return [formatReadingDuration(payload.minutes), "Waktu baca"];
             }
-            if (name === "pages") return [value ?? 0, "Pages"];
+            if (name === "pages") return [value ?? 0, "Halaman"];
             return [value ?? 0, String(name)];
           }}
           labelFormatter={(label) => label}
@@ -96,9 +96,9 @@ export function ReadingActivityMonthlyChart({
           <Legend
             formatter={(value) =>
               value === "pages"
-                ? "Pages"
+                ? "Halaman"
                 : value === "hours"
-                  ? "Reading time"
+                  ? "Waktu baca"
                   : value
             }
           />

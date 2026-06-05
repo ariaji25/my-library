@@ -7,6 +7,7 @@ import {
   startOfMonth,
   subMonths,
 } from "date-fns";
+import { formatChartMonthYear } from "@/lib/format";
 
 export type ReadingLogActivityInput = {
   id: string;
@@ -100,7 +101,7 @@ export function buildMonthlyReadingActivity(
     const start = startOfMonth(subMonths(now, monthCount - 1 - i));
     return {
       month: format(start, "yyyy-MM"),
-      label: format(start, "MMM yyyy"),
+      label: formatChartMonthYear(start),
       start,
     };
   });

@@ -33,8 +33,8 @@ export function ReadingProgressExport({ sessionCount, ...data }: Props) {
       size="icon"
       disabled={exporting}
       onClick={handleExport}
-      aria-label={exporting ? "Sharing…" : "Share reading progress"}
-      title="Share as PNG"
+      aria-label={exporting ? "Membagikan…" : "Bagikan progres baca"}
+      title="Bagikan sebagai PNG"
     >
       <Share2 className="h-4 w-4" />
     </Button>

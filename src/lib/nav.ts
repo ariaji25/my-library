@@ -3,6 +3,7 @@ import {
   FolderOpen,
   LayoutDashboard,
   Library,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -16,26 +17,32 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   {
     href: "/",
-    label: "Dashboard",
-    shortLabel: "Home",
+    label: "Beranda",
+    shortLabel: "Beranda",
     icon: LayoutDashboard,
   },
   {
     href: "/library",
-    label: "Library",
-    shortLabel: "Library",
+    label: "Perpustakaan",
+    shortLabel: "Buku",
     icon: Library,
   },
   {
+    href: "/assistant",
+    label: "AI Pustakawan",
+    shortLabel: "AI",
+    icon: Sparkles,
+  },
+  {
     href: "/wishlist",
-    label: "Wishlist",
-    shortLabel: "Wishlist",
+    label: "Daftar keinginan",
+    shortLabel: "Keinginan",
     icon: Bookmark,
   },
   {
     href: "/collections",
-    label: "Collections",
-    shortLabel: "Lists",
+    label: "Koleksi",
+    shortLabel: "Koleksi",
     icon: FolderOpen,
   },
 ];

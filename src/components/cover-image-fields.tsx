@@ -20,13 +20,13 @@ export function CoverImageFields({
 
   return (
     <div className="space-y-4 md:col-span-2">
-      <Label>Cover image</Label>
+      <Label>Sampul buku</Label>
 
       <div className="flex flex-wrap items-start gap-4">
         <div className="relative aspect-[2/3] w-24 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-muted/40 sm:w-28">
           <Image
             src={preview}
-            alt="Cover preview"
+            alt="Pratinjau sampul"
             fill
             className="object-cover"
             sizes="112px"
@@ -40,7 +40,7 @@ export function CoverImageFields({
               htmlFor={coverFileId}
               className="text-sm font-normal text-muted-foreground"
             >
-              Upload file
+              Unggah file
             </Label>
             <Input
               id={coverFileId}
@@ -49,7 +49,7 @@ export function CoverImageFields({
               accept="image/jpeg,image/png,image/webp,image/gif"
             />
             <p className="text-xs text-muted-foreground">
-              JPEG, PNG, WebP, or GIF · max 5 MB
+              JPEG, PNG, WebP, atau GIF · maks. 5 MB
             </p>
           </div>
 
@@ -58,7 +58,7 @@ export function CoverImageFields({
               htmlFor={coverImageId}
               className="text-sm font-normal text-muted-foreground"
             >
-              Or image URL
+              Atau URL gambar
             </Label>
             <Input
               id={coverImageId}
@@ -81,7 +81,7 @@ export function CoverImageFields({
                 value="true"
                 className="rounded border-border"
               />
-              Remove uploaded cover
+              Hapus sampul yang diunggah
             </label>
           )}
         </div>

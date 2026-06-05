@@ -8,6 +8,7 @@ import {
   subMonths,
   subWeeks,
 } from "date-fns";
+import { formatChartMonthYear, formatChartWeekLabel } from "@/lib/format";
 
 const WEEK_OPTS = { weekStartsOn: 0 as const };
 
@@ -50,7 +51,7 @@ export function buildWeeklyProgress(
     const start = startOfWeek(subWeeks(now, weekCount - 1 - i), WEEK_OPTS);
     return {
       week: format(start, "yyyy-MM-dd"),
-      label: format(start, "MMM d"),
+      label: formatChartWeekLabel(start),
       start,
       end: endOfWeek(start, WEEK_OPTS),
     };
@@ -73,7 +74,7 @@ export function buildMonthlyProgress(
     const start = startOfMonth(subMonths(now, monthCount - 1 - i));
     return {
       month: format(start, "yyyy-MM"),
-      label: format(start, "MMM yyyy"),
+      label: formatChartMonthYear(start),
       start,
       end: endOfMonth(start),
     };

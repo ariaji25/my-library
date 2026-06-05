@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     );
   } catch {
     return NextResponse.json(
-      { error: "Could not search books right now" },
+      { error: "Tidak dapat mencari buku saat ini" },
       { status: 502 }
     );
   }

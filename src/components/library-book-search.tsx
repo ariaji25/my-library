@@ -20,8 +20,8 @@ export function LibraryBookSearch() {
   return (
     <div className="overflow-visible rounded-2xl border border-primary/25 bg-primary/5 p-4">
       <BookSearchAutocomplete
-        label="Find & add a book (Open Library)"
-        placeholder="Search by title or author…"
+        label="Cari & tambah buku (Open Library)"
+        placeholder="Cari judul atau penulis…"
         onSelect={onSelect}
       />
     </div>

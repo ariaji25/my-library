@@ -47,7 +47,7 @@ export default async function LoginPage({
             <BookMarked className="h-6 w-6 text-primary" />
           </div>
           <CardTitle className="font-heading text-2xl">{APP_NAME}</CardTitle>
-          <CardDescription>Sign in to continue</CardDescription>
+          <CardDescription>Masuk untuk melanjutkan</CardDescription>
         </CardHeader>
         <CardContent>
           <form action="/api/auth/login" method="POST" className="space-y-4">
@@ -57,7 +57,7 @@ export default async function LoginPage({
                 className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 role="alert"
               >
-                Invalid email or password.
+                Email atau kata sandi tidak valid.
               </p>
             )}
             <div className="space-y-2">
@@ -71,7 +71,7 @@ export default async function LoginPage({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Kata sandi</Label>
               <Input
                 id="password"
                 name="password"
@@ -81,15 +81,15 @@ export default async function LoginPage({
               />
             </div>
             <Button type="submit" className="w-full">
-              Sign in
+              Masuk
             </Button>
           </form>
         </CardContent>
       </Card>
       <p className="mt-6 text-center text-xs text-muted-foreground">
-        Protected with{" "}
+        Dilindungi dengan{" "}
         <Link href="/" className="underline-offset-2 hover:underline">
-          app login
+          login aplikasi
         </Link>
       </p>
     </div>

@@ -70,7 +70,7 @@ export async function searchExternalBooks(
   });
 
   if (!res.ok) {
-    throw new Error("Book search failed");
+    throw new Error("Pencarian buku gagal");
   }
 
   const data = (await res.json()) as OpenLibraryResponse;

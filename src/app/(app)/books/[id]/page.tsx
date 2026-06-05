@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Sparkles, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { getBook } from "@/lib/queries";
 import {
@@ -13,6 +13,7 @@ import {
   updateBookStatus,
 } from "@/lib/actions";
 import { BOOK_STATUSES, PLACEHOLDER_COVER } from "@/lib/constants";
+import { formatAppDate } from "@/lib/format";
 import { StarRating } from "@/components/star-rating";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export default async function BookDetailPage({
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to library
+        Kembali ke perpustakaan
       </Link>
 
       <div className="grid gap-6 sm:gap-8 lg:grid-cols-[min(240px,100%)_1fr]">
@@ -74,6 +75,16 @@ export default async function BookDetailPage({
             </div>
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/assistant?book=${id}`}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 text-xs font-semibold text-primary transition hover:bg-primary/15 sm:text-sm"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Tanya AI
+            </Link>
+          </div>
+
           <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {BOOK_STATUSES.map((s) => (
               <form key={s.value} action={updateBookStatus.bind(null, id, s.value)}>
@@ -92,10 +103,10 @@ export default async function BookDetailPage({
           {(book.startedAt || book.completedAt) && (
             <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
               {book.startedAt && (
-                <span>Started {format(book.startedAt, "MMM d, yyyy")}</span>
+                <span>Mulai {formatAppDate(book.startedAt)}</span>
               )}
               {book.completedAt && (
-                <span>Finished {format(book.completedAt, "MMM d, yyyy")}</span>
+                <span>Selesai {formatAppDate(book.completedAt)}</span>
               )}
             </div>
           )}
@@ -104,7 +115,7 @@ export default async function BookDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Edit details</CardTitle>
+          <CardTitle>Edit detail</CardTitle>
         </CardHeader>
         <CardContent>
           <form
@@ -113,11 +124,11 @@ export default async function BookDetailPage({
             className="grid gap-4 md:grid-cols-2"
           >
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Judul</Label>
               <Input id="title" name="title" defaultValue={book.title} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="author">Author</Label>
+              <Label htmlFor="author">Penulis</Label>
               <Input id="author" name="author" defaultValue={book.author} required />
             </div>
             <div className="space-y-2">
@@ -125,7 +136,7 @@ export default async function BookDetailPage({
               <Input id="genre" name="genre" defaultValue={book.genre} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="publishedYear">Year</Label>
+              <Label htmlFor="publishedYear">Tahun terbit</Label>
               <Input
                 id="publishedYear"
                 name="publishedYear"
@@ -150,13 +161,13 @@ export default async function BookDetailPage({
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="totalPages">Total pages</Label>
+              <Label htmlFor="totalPages">Total halaman</Label>
               <Input
                 id="totalPages"
                 name="totalPages"
                 type="number"
                 min={1}
-                placeholder="For progress tracking"
+                placeholder="Untuk pelacakan progres"
                 defaultValue={book.totalPages ?? ""}
               />
             </div>
@@ -172,7 +183,7 @@ export default async function BookDetailPage({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="startedAt">Started reading</Label>
+              <Label htmlFor="startedAt">Mulai membaca</Label>
               <Input
                 id="startedAt"
                 name="startedAt"
@@ -185,7 +196,7 @@ export default async function BookDetailPage({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="completedAt">Finished reading</Label>
+              <Label htmlFor="completedAt">Selesai membaca</Label>
               <Input
                 id="completedAt"
                 name="completedAt"
@@ -198,16 +209,16 @@ export default async function BookDetailPage({
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="review">Review (Markdown supported)</Label>
+              <Label htmlFor="review">Ulasan (Markdown didukung)</Label>
               <Textarea
                 id="review"
                 name="review"
                 rows={6}
                 defaultValue={book.review ?? ""}
-                placeholder="Your thoughts on this book..."
+                placeholder="Pendapatmu tentang buku ini…"
               />
             </div>
-            <Button type="submit">Save changes</Button>
+            <Button type="submit">Simpan perubahan</Button>
           </form>
         </CardContent>
       </Card>
@@ -223,7 +234,7 @@ export default async function BookDetailPage({
       {book.review && (
         <Card>
           <CardHeader>
-            <CardTitle>Review preview</CardTitle>
+            <CardTitle>Pratinjau ulasan</CardTitle>
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none dark:prose-invert">
             <ReactMarkdown>{book.review}</ReactMarkdown>
@@ -233,11 +244,11 @@ export default async function BookDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Favorite quotes</CardTitle>
+          <CardTitle>Kutipan favorit</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {book.quotes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No quotes yet.</p>
+            <p className="text-sm text-muted-foreground">Belum ada kutipan.</p>
           ) : (
             <ul className="space-y-4">
               {book.quotes.map((quote) => (
@@ -260,10 +271,10 @@ export default async function BookDetailPage({
           <form action={addQuote.bind(null, id)} className="flex flex-col gap-2 sm:flex-row">
             <Input
               name="content"
-              placeholder="Add a favorite quote..."
+              placeholder="Tambahkan kutipan favorit…"
               className="flex-1"
             />
-            <Button type="submit">Add</Button>
+            <Button type="submit">Tambah</Button>
           </form>
         </CardContent>
       </Card>
@@ -271,7 +282,7 @@ export default async function BookDetailPage({
       <form action={deleteBook.bind(null, id)}>
         <Button type="submit" variant="destructive">
           <Trash2 className="h-4 w-4" />
-          Delete book
+          Hapus buku
         </Button>
       </form>
     </div>

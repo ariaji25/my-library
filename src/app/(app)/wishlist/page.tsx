@@ -1,7 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { getWishlistItems } from "@/lib/queries";
 import { createWishlistItem, deleteWishlistItem } from "@/lib/actions";
-import { WISHLIST_PRIORITIES } from "@/lib/constants";
+import { WISHLIST_PRIORITIES, priorityLabel } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,28 +21,30 @@ export default async function WishlistPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-heading text-2xl font-semibold sm:text-3xl">Wishlist</h1>
+        <h1 className="font-heading text-2xl font-semibold sm:text-3xl">
+          Daftar keinginan
+        </h1>
         <p className="mt-0.5 text-sm text-muted-foreground sm:mt-1 sm:text-base">
-          Books you want to buy or read next
+          Buku yang ingin kamu beli atau baca berikutnya
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Add to wishlist</CardTitle>
+          <CardTitle>Tambah ke daftar keinginan</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={createWishlistItem} className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">Judul *</Label>
               <Input id="title" name="title" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="author">Author *</Label>
+              <Label htmlFor="author">Penulis *</Label>
               <Input id="author" name="author" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">Prioritas</Label>
               <select
                 id="priority"
                 name="priority"
@@ -57,17 +59,17 @@ export default async function WishlistPage() {
               </select>
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">Catatan</Label>
               <Textarea id="notes" name="notes" rows={2} />
             </div>
-            <Button type="submit">Add book</Button>
+            <Button type="submit">Tambah buku</Button>
           </form>
         </CardContent>
       </Card>
 
       {items.length === 0 ? (
         <p className="text-center text-muted-foreground py-12">
-          Your wishlist is empty.
+          Daftar keinginanmu masih kosong.
         </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
@@ -78,7 +80,7 @@ export default async function WishlistPage() {
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium">{item.title}</h3>
                     <Badge variant={priorityVariant[item.priority]}>
-                      {item.priority.toLowerCase()}
+                      {priorityLabel(item.priority)}
                     </Badge>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">

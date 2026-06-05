@@ -18,7 +18,7 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: "Arinda's personal digital bookshelf",
+  description: "Rak buku digital pribadi Arinda",
 };
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="id" suppressHydrationWarning>
       <body
         className={`${nunito.variable} ${cormorant.variable} min-h-screen antialiased`}
       >

@@ -27,7 +27,7 @@ export function WeeklyProgressChart({
   if (!hasActivity) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
-        Finish or start books to see weekly progress.
+        Selesaikan atau mulai buku untuk melihat progres mingguan.
       </p>
     );
   }
@@ -46,12 +46,12 @@ export function WeeklyProgressChart({
           }}
           formatter={(value, name) => [
             value ?? 0,
-            name === "completed" ? "Finished" : "Started",
+            name === "completed" ? "Selesai" : "Dimulai",
           ]}
         />
         <Legend
           formatter={(value) =>
-            value === "completed" ? "Finished" : "Started"
+            value === "completed" ? "Selesai" : "Dimulai"
           }
         />
         <Bar

@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { Clock, Quote, Trash2 } from "lucide-react";
 import type { ReadingLog } from "@/generated/prisma/client";
 import { addReadingLog, deleteReadingLog } from "@/lib/actions";
+import { formatAppDate } from "@/lib/format";
 import {
   formatReadingDuration,
   summarizeReadingLogs,
@@ -35,9 +36,9 @@ export function ReadingLogSection({
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
         <div>
-          <CardTitle>Reading progress</CardTitle>
+          <CardTitle>Progres membaca</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Log pages, time spent reading, and a quote from each session.
+            Catat halaman, waktu baca, dan kutipan dari setiap sesi.
           </p>
         </div>
         <ReadingProgressExport
@@ -57,7 +58,7 @@ export function ReadingLogSection({
           <div className="grid gap-4 rounded-2xl border border-border/80 bg-muted/30 p-4 sm:grid-cols-3">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Pages logged
+                Halaman tercatat
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">
                 {stats.pagesRead}
@@ -71,7 +72,7 @@ export function ReadingLogSection({
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Time reading
+                Waktu baca
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">
                 {formatReadingDuration(stats.minutesRead)}
@@ -79,7 +80,7 @@ export function ReadingLogSection({
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Sessions
+                Sesi
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">
                 {stats.sessionCount}
@@ -91,7 +92,7 @@ export function ReadingLogSection({
         {stats.percentComplete != null && (
           <div className="space-y-2">
             <div className="flex items-end justify-between text-sm">
-              <span className="text-muted-foreground">Book progress</span>
+              <span className="text-muted-foreground">Progres buku</span>
               <span className="font-semibold tabular-nums">
                 {stats.percentComplete}%
               </span>
@@ -105,7 +106,7 @@ export function ReadingLogSection({
           className="grid gap-4 rounded-2xl border border-border/80 p-4 sm:grid-cols-2"
         >
           <div className="space-y-2">
-            <Label htmlFor="reading-date">Date</Label>
+            <Label htmlFor="reading-date">Tanggal</Label>
             <Input
               id="reading-date"
               name="date"
@@ -115,44 +116,44 @@ export function ReadingLogSection({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pagesRead">Pages read</Label>
+            <Label htmlFor="pagesRead">Halaman dibaca</Label>
             <Input
               id="pagesRead"
               name="pagesRead"
               type="number"
               min={1}
-              placeholder="e.g. 25"
+              placeholder="mis. 25"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="minutesRead">Reading time (minutes)</Label>
+            <Label htmlFor="minutesRead">Waktu baca (menit)</Label>
             <Input
               id="minutesRead"
               name="minutesRead"
               type="number"
               min={1}
-              placeholder="e.g. 45"
+              placeholder="mis. 45"
               required
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="quoteOfTheDay">Quote of the day</Label>
+            <Label htmlFor="quoteOfTheDay">Kutipan hari ini</Label>
             <Textarea
               id="quoteOfTheDay"
               name="quoteOfTheDay"
               rows={2}
-              placeholder="A line or passage that stood out today…"
+              placeholder="Kalimat atau bagian yang menonjol hari ini…"
             />
           </div>
           <Button type="submit" className="sm:col-span-2 sm:w-fit">
-            Log reading session
+            Catat sesi baca
           </Button>
         </form>
 
         {logs.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No reading sessions yet. Log your first session above.
+            Belum ada sesi baca. Catat sesi pertamamu di atas.
           </p>
         ) : (
           <ul className="space-y-3">
@@ -165,10 +166,10 @@ export function ReadingLogSection({
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                       <span className="font-medium">
-                        {format(log.date, "MMM d, yyyy")}
+                        {formatAppDate(log.date)}
                       </span>
                       <span className="text-muted-foreground">
-                        {log.pagesRead} pages
+                        {log.pagesRead} halaman
                       </span>
                       <span className="inline-flex items-center gap-1 text-muted-foreground">
                         <Clock className="h-3.5 w-3.5" />

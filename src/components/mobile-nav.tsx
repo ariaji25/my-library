@@ -11,7 +11,7 @@ export function MobileNav() {
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-50 shrink-0 border-t border-border/80 bg-card/95 backdrop-blur-md md:hidden"
-      aria-label="Main navigation"
+      aria-label="Navigasi utama"
     >
       <div
         className="flex h-14 items-stretch"

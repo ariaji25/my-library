@@ -26,7 +26,7 @@ export async function createBook(formData: FormData) {
   const status = (formData.get("status") as BookStatus) || "NOT_STARTED";
 
   if (!title || !author || !genre) {
-    throw new Error("Title, author, and genre are required");
+    throw new Error("Judul, penulis, dan genre wajib diisi");
   }
 
   const coverImage = await resolveCoverFromFormData(formData);
@@ -152,12 +152,12 @@ export async function addReadingLog(bookId: string, formData: FormData) {
   const pagesRead = Number(pagesRaw);
   const minutesRead = Number(minutesRaw);
 
-  if (!dateRaw) throw new Error("Date is required");
+  if (!dateRaw) throw new Error("Tanggal wajib diisi");
   if (!Number.isFinite(pagesRead) || pagesRead < 1) {
-    throw new Error("Pages read must be at least 1");
+    throw new Error("Halaman dibaca minimal 1");
   }
   if (!Number.isFinite(minutesRead) || minutesRead < 1) {
-    throw new Error("Reading time must be at least 1 minute");
+    throw new Error("Waktu baca minimal 1 menit");
   }
 
   await prisma.readingLog.create({
@@ -196,7 +196,7 @@ export async function createWishlistItem(formData: FormData) {
   const priority = (formData.get("priority") as WishlistPriority) || "MEDIUM";
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
-  if (!title || !author) throw new Error("Title and author are required");
+  if (!title || !author) throw new Error("Judul dan penulis wajib diisi");
 
   await prisma.wishlistItem.create({ data: { title, author, priority, notes } });
   revalidatePath("/wishlist");
@@ -212,7 +212,7 @@ export async function deleteWishlistItem(id: string) {
 export async function createCollection(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim() || null;
-  if (!name) throw new Error("Name is required");
+  if (!name) throw new Error("Nama wajib diisi");
 
   const collection = await prisma.collection.create({
     data: { name, description },

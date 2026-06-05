@@ -31,13 +31,13 @@ function extensionForMime(type: string): string {
 
 export async function saveCoverUpload(file: File): Promise<string> {
   if (file.size === 0) {
-    throw new Error("Cover file is empty");
+    throw new Error("File sampul kosong");
   }
   if (file.size > MAX_BYTES) {
-    throw new Error("Cover image must be 5 MB or smaller");
+    throw new Error("Gambar sampul maksimal 5 MB");
   }
   if (!ALLOWED_TYPES.has(file.type)) {
-    throw new Error("Cover must be JPEG, PNG, WebP, or GIF");
+    throw new Error("Sampul harus JPEG, PNG, WebP, atau GIF");
   }
 
   await mkdir(UPLOAD_DIR, { recursive: true });

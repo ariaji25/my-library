@@ -33,9 +33,9 @@ export function summarizeReadingLogs(
 }
 
 export function formatReadingDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 60) return `${minutes} menit`;
   const hours = Math.floor(minutes / 60);
   const remainder = minutes % 60;
-  if (remainder === 0) return `${hours} hr`;
-  return `${hours} hr ${remainder} min`;
+  if (remainder === 0) return `${hours} jam`;
+  return `${hours} jam ${remainder} menit`;
 }
