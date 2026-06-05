@@ -5,6 +5,7 @@ import {
   buildWeeklyProgress,
   getCurrentWeekProgress,
 } from "@/lib/monthly-progress";
+import { getLocale } from "@/lib/i18n/server";
 import { serializeReadingActivity } from "@/lib/reading-activity";
 import { subMonths } from "date-fns";
 
@@ -75,6 +76,7 @@ export async function getBook(id: string) {
 }
 
 export async function getDashboardStats() {
+  const locale = await getLocale();
   const [total, read, reading, unread, wishlistBooks, books, wishlistCount] =
     await Promise.all([
       prisma.book.count(),
@@ -133,7 +135,7 @@ export async function getDashboardStats() {
     completedAt: b.completedAt,
     startedAt: b.startedAt,
   }));
-  const weeklyProgress = buildWeeklyProgress(bookDates);
+  const weeklyProgress = buildWeeklyProgress(bookDates, locale);
   const currentWeek = getCurrentWeekProgress(weeklyProgress);
 
   const quoteOfTheDay = await prisma.readingLog.findFirst({
@@ -159,7 +161,7 @@ export async function getDashboardStats() {
     },
   });
 
-  const readingActivity = serializeReadingActivity(readingLogs);
+  const readingActivity = serializeReadingActivity(readingLogs, locale);
 
   return {
     total,

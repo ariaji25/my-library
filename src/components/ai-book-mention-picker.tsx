@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { BookMarked, X } from "lucide-react";
 import type { AiMentionBook } from "@/lib/ai-types";
+import { interpolate } from "@/lib/i18n";
+import { useLocale } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +15,7 @@ type Props = {
 };
 
 export function AiBookMentionPicker({ books, onChange, disabled }: Props) {
+  const { messages: t } = useLocale();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AiMentionBook[]>([]);
@@ -90,7 +93,7 @@ export function AiBookMentionPicker({ books, onChange, disabled }: Props) {
                 onClick={() => removeBook(book.id)}
                 disabled={disabled}
                 className="rounded-full p-0.5 hover:bg-primary/20"
-                aria-label={`Hapus ${book.title}`}
+                aria-label={interpolate(t.aria.removeBook, { title: book.title })}
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -109,7 +112,7 @@ export function AiBookMentionPicker({ books, onChange, disabled }: Props) {
           onClick={() => setOpen((v) => !v)}
         >
           <BookMarked className="mr-1.5 h-3.5 w-3.5" />
-          Sebut buku
+          {t.assistant.mentionBook}
         </Button>
 
         {open && (
@@ -118,19 +121,19 @@ export function AiBookMentionPicker({ books, onChange, disabled }: Props) {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari judul atau penulis…"
+              placeholder={t.assistant.mentionSearch}
               autoFocus
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring/50"
             />
             <ul className="mt-2 max-h-48 overflow-y-auto">
               {loading && (
                 <li className="px-3 py-2 text-sm text-muted-foreground">
-                  Mencari…
+                  {t.assistant.searching}
                 </li>
               )}
               {!loading && query.trim() && results.length === 0 && (
                 <li className="px-3 py-2 text-sm text-muted-foreground">
-                  Buku tidak ketemu
+                  {t.assistant.bookNotFound}
                 </li>
               )}
               {results.map((book) => {
@@ -156,7 +159,7 @@ export function AiBookMentionPicker({ books, onChange, disabled }: Props) {
               })}
             </ul>
             <p className="mt-1 px-1 text-[0.65rem] text-muted-foreground">
-              Maks. 3 buku per pesan. Bisa juga ketik @ di kotak chat.
+              {t.assistant.mentionHint}
             </p>
           </div>
         )}

@@ -1,5 +1,8 @@
+"use client";
+
 import type { BookStatus } from "@/generated/prisma/client";
 import { Badge } from "@/components/ui/badge";
+import { useLocale } from "@/components/locale-provider";
 import { formatStatus } from "@/lib/utils";
 
 const variants: Record<
@@ -13,5 +16,8 @@ const variants: Record<
 };
 
 export function StatusBadge({ status }: { status: BookStatus }) {
-  return <Badge variant={variants[status]}>{formatStatus(status)}</Badge>;
+  const { messages } = useLocale();
+  return (
+    <Badge variant={variants[status]}>{formatStatus(status, messages)}</Badge>
+  );
 }

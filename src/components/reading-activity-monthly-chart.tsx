@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import type { MonthlyReadingActivityPoint } from "@/lib/reading-activity";
 import { formatReadingDuration } from "@/lib/reading-stats";
+import { useLocale } from "@/components/locale-provider";
 
 export function ReadingActivityMonthlyChart({
   data,
@@ -20,6 +21,7 @@ export function ReadingActivityMonthlyChart({
   data: MonthlyReadingActivityPoint[];
   compact?: boolean;
 }) {
+  const { messages: m } = useLocale();
   const hasActivity = data.some(
     (d) => d.pages > 0 || d.minutes > 0 || d.sessions > 0
   );
@@ -33,7 +35,7 @@ export function ReadingActivityMonthlyChart({
             : "py-8 text-center text-sm text-muted-foreground"
         }
       >
-        Catat sesi baca di bukumu untuk melihat aktivitas bulanan.
+        {m.reading.monthlyEmpty}
       </p>
     );
   }
@@ -74,7 +76,7 @@ export function ReadingActivityMonthlyChart({
           allowDecimals={false}
           tick={{ fontSize: tickSize }}
           width={compact ? 28 : 36}
-          tickFormatter={(v) => `${v}j`}
+          tickFormatter={(v) => `${v}${m.duration.hoursShort}`}
         />
         <Tooltip
           contentStyle={{
@@ -85,9 +87,9 @@ export function ReadingActivityMonthlyChart({
           formatter={(value, name, item) => {
             const payload = item.payload as { minutes: number; activeDays: number };
             if (name === "hours") {
-              return [formatReadingDuration(payload.minutes), "Waktu baca"];
+              return [formatReadingDuration(payload.minutes, m), m.reading.chartReadingTime];
             }
-            if (name === "pages") return [value ?? 0, "Halaman"];
+            if (name === "pages") return [value ?? 0, m.reading.chartPages];
             return [value ?? 0, String(name)];
           }}
           labelFormatter={(label) => label}
@@ -96,9 +98,9 @@ export function ReadingActivityMonthlyChart({
           <Legend
             formatter={(value) =>
               value === "pages"
-                ? "Halaman"
+                ? m.reading.chartPages
                 : value === "hours"
-                  ? "Waktu baca"
+                  ? m.reading.chartReadingTime
                   : value
             }
           />

@@ -9,6 +9,7 @@ import {
   subWeeks,
 } from "date-fns";
 import { formatChartMonthYear, formatChartWeekLabel } from "@/lib/format";
+import type { Locale } from "@/lib/i18n";
 
 const WEEK_OPTS = { weekStartsOn: 0 as const };
 
@@ -44,6 +45,7 @@ function countInInterval(
 
 export function buildWeeklyProgress(
   books: BookDates[],
+  locale: Locale,
   weekCount = 12,
   now = new Date()
 ): WeeklyProgressPoint[] {
@@ -51,7 +53,7 @@ export function buildWeeklyProgress(
     const start = startOfWeek(subWeeks(now, weekCount - 1 - i), WEEK_OPTS);
     return {
       week: format(start, "yyyy-MM-dd"),
-      label: formatChartWeekLabel(start),
+      label: formatChartWeekLabel(start, locale),
       start,
       end: endOfWeek(start, WEEK_OPTS),
     };
@@ -67,6 +69,7 @@ export function buildWeeklyProgress(
 
 export function buildMonthlyProgress(
   books: BookDates[],
+  locale: Locale,
   monthCount = 12,
   now = new Date()
 ): MonthlyProgressPoint[] {
@@ -74,7 +77,7 @@ export function buildMonthlyProgress(
     const start = startOfMonth(subMonths(now, monthCount - 1 - i));
     return {
       month: format(start, "yyyy-MM"),
-      label: formatChartMonthYear(start),
+      label: formatChartMonthYear(start, locale),
       start,
       end: endOfMonth(start),
     };

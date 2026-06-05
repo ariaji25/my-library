@@ -2,22 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS, isNavActive } from "@/lib/nav";
+import { getNavItems, isNavActive } from "@/lib/nav";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/components/locale-provider";
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { messages } = useLocale();
+  const navItems = getNavItems(messages);
 
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-50 shrink-0 border-t border-border/80 bg-card/95 backdrop-blur-md md:hidden"
-      aria-label="Navigasi utama"
+      aria-label={messages.nav.mainAria}
     >
       <div
         className="flex h-14 items-stretch"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        {NAV_ITEMS.map(({ href, shortLabel, icon: Icon }) => {
+        {navItems.map(({ href, shortLabel, icon: Icon }) => {
           const active = isNavActive(pathname, href);
           return (
             <Link

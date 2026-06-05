@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useLocale } from "@/components/locale-provider";
 
 export type WeeklyProgressChartPoint = {
   label: string;
@@ -22,12 +23,13 @@ export function WeeklyProgressChart({
 }: {
   data: WeeklyProgressChartPoint[];
 }) {
+  const { messages: m } = useLocale();
   const hasActivity = data.some((d) => d.completed > 0 || d.started > 0);
 
   if (!hasActivity) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
-        Selesaikan atau mulai buku untuk melihat progres mingguan.
+        {m.reading.weeklyEmpty}
       </p>
     );
   }
@@ -46,12 +48,12 @@ export function WeeklyProgressChart({
           }}
           formatter={(value, name) => [
             value ?? 0,
-            name === "completed" ? "Selesai" : "Dimulai",
+            name === "completed" ? m.reading.chartFinished : m.reading.chartStarted,
           ]}
         />
         <Legend
           formatter={(value) =>
-            value === "completed" ? "Selesai" : "Dimulai"
+            value === "completed" ? m.reading.chartFinished : m.reading.chartStarted
           }
         />
         <Bar

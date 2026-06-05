@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Nunito } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import { APP_NAME } from "@/lib/constants";
+import { LocaleProvider } from "@/components/locale-provider";
+import { getLocale, getMessages } from "@/lib/i18n/server";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -16,22 +17,31 @@ const cormorant = Cormorant_Garamond({
   weight: ["500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: APP_NAME,
-  description: "Rak buku digital pribadi Arinda",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const messages = getMessages(locale);
+  return {
+    title: messages.app.name,
+    description: messages.app.description,
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = getMessages(locale);
+
   return (
-    <html lang="id" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${nunito.variable} ${cormorant.variable} min-h-screen antialiased`}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <LocaleProvider locale={locale} messages={messages}>
+          <ThemeProvider>{children}</ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

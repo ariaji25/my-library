@@ -12,11 +12,10 @@ import {
 import { formatAppMonthDay, formatAppMonthYear } from "@/lib/format";
 import { formatReadingDuration } from "@/lib/reading-stats";
 import { ReadingActivityMonthlyChart } from "@/components/reading-activity-monthly-chart";
+import { useLocale } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-
-const WEEKDAYS = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
 const HEAT_CLASS: Record<0 | 1 | 2 | 3 | 4, string> = {
   0: "bg-muted/40",
@@ -34,6 +33,9 @@ export function ReadingActivityDashboard({
   currentMonthKey,
   hasActivity,
 }: Props) {
+  const { locale, messages: m } = useLocale();
+  const weekdays = m.reading.weekdays;
+
   const dailyMap = useMemo(() => {
     const inputs = logs.map((l) => ({
       id: l.id,
@@ -60,7 +62,7 @@ export function ReadingActivityDashboard({
     [viewDate, dailyMap]
   );
 
-  const currentMonthStats = monthly.find((m) => m.month === viewKey);
+  const currentMonthStats = monthly.find((item) => item.month === viewKey);
   const selectedDay = selectedDate ? dailyMap.get(selectedDate) : null;
 
   function shiftMonth(delta: number) {
@@ -75,11 +77,11 @@ export function ReadingActivityDashboard({
     return (
       <Card className="border-border/80">
         <CardHeader className="px-4 py-3 sm:px-5">
-          <CardTitle className="text-base">Aktivitas membaca</CardTitle>
+          <CardTitle className="text-base">{m.reading.activity}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4 sm:px-5">
           <p className="rounded-xl border border-dashed border-border/80 py-6 text-center text-xs text-muted-foreground">
-            Catat bacaan di buku untuk mengisi kalendermu.
+            {m.reading.activityEmpty}
           </p>
         </CardContent>
       </Card>
@@ -90,17 +92,17 @@ export function ReadingActivityDashboard({
     <Card className="border-border/80">
       <CardHeader className="space-y-2 px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base">Aktivitas membaca</CardTitle>
+          <CardTitle className="text-base">{m.reading.activity}</CardTitle>
           {currentMonthStats && (
             <p className="text-xs tabular-nums text-muted-foreground">
               <span className="font-medium text-foreground">
                 {currentMonthStats.pages}
               </span>{" "}
-              hal ·{" "}
+              {m.reading.pagesShort} ·{" "}
               <span className="font-medium text-foreground">
-                {formatReadingDuration(currentMonthStats.minutes)}
+                {formatReadingDuration(currentMonthStats.minutes, m)}
               </span>{" "}
-              · {currentMonthStats.activeDays} hari
+              · {currentMonthStats.activeDays} {m.reading.daysShort}
             </p>
           )}
         </div>
@@ -114,12 +116,12 @@ export function ReadingActivityDashboard({
               size="icon"
               className="h-7 w-7"
               onClick={() => shiftMonth(-1)}
-              aria-label="Bulan sebelumnya"
+              aria-label={m.aria.previousMonth}
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
             <span className="text-xs font-medium">
-              {formatAppMonthYear(viewDate)}
+              {formatAppMonthYear(viewDate, locale)}
             </span>
             <Button
               type="button"
@@ -127,14 +129,14 @@ export function ReadingActivityDashboard({
               size="icon"
               className="h-7 w-7"
               onClick={() => shiftMonth(1)}
-              aria-label="Bulan berikutnya"
+              aria-label={m.aria.nextMonth}
             >
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
 
           <div className="grid grid-cols-7 justify-items-center gap-0.5 text-[10px] text-muted-foreground">
-            {WEEKDAYS.map((d, i) => (
+            {weekdays.map((d, i) => (
               <span key={`${d}-${i}`} className="w-7 text-center">
                 {d}
               </span>
@@ -177,7 +179,7 @@ export function ReadingActivityDashboard({
                   )}
                   title={
                     active
-                      ? `${cell.day} · ${cell.pages} halaman · ${formatReadingDuration(cell.minutes)}`
+                      ? `${cell.day} · ${cell.pages} ${m.common.pages} · ${formatReadingDuration(cell.minutes, m)}`
                       : `${cell.day}`
                   }
                 >
@@ -196,13 +198,13 @@ export function ReadingActivityDashboard({
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/50">
                 <Flame className="h-2.5 w-2.5 text-primary-foreground" />
               </span>
-              baca
+              {m.reading.readLegend}
             </span>
             <span className="inline-flex items-center gap-1">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/50">
                 <Quote className="h-2.5 w-2.5 text-primary-foreground" />
               </span>
-              kutipan
+              {m.reading.quoteLegend}
             </span>
           </div>
 
@@ -210,12 +212,13 @@ export function ReadingActivityDashboard({
             <div className="rounded-xl border border-border/80 bg-muted/30 px-3 py-2">
               <p className="text-xs font-medium">
                 {formatAppMonthDay(
-                  parse(selectedDay.date, "yyyy-MM-dd", new Date())
+                  parse(selectedDay.date, "yyyy-MM-dd", new Date()),
+                  locale
                 )}
                 <span className="font-normal text-muted-foreground">
                   {" "}
-                  · {selectedDay.pages} hal ·{" "}
-                  {formatReadingDuration(selectedDay.minutes)}
+                  · {selectedDay.pages} {m.reading.pagesShort} ·{" "}
+                  {formatReadingDuration(selectedDay.minutes, m)}
                 </span>
               </p>
               <ul className="mt-1.5 space-y-1">
@@ -229,8 +232,8 @@ export function ReadingActivityDashboard({
                     </Link>
                     <span className="text-muted-foreground">
                       {" "}
-                      · {log.pagesRead} hal ·{" "}
-                      {formatReadingDuration(log.minutesRead)}
+                      · {log.pagesRead} {m.reading.pagesShort} ·{" "}
+                      {formatReadingDuration(log.minutesRead, m)}
                     </span>
                   </li>
                 ))}
@@ -241,7 +244,7 @@ export function ReadingActivityDashboard({
 
         <section className="border-t border-border/80 pt-3">
           <p className="mb-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            12 bulan terakhir
+            {m.reading.last12Months}
           </p>
           <ReadingActivityMonthlyChart data={monthly} compact />
         </section>

@@ -8,16 +8,19 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useLocale } from "@/components/locale-provider";
 
 export function GenreChart({
   data,
 }: {
   data: { genre: string; count: number }[];
 }) {
+  const { messages: m } = useLocale();
+
   if (data.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
-        Tambahkan buku untuk melihat distribusi genre.
+        {m.reading.genreEmpty}
       </p>
     );
   }

@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { BookSearchAutocomplete } from "@/components/book-search-autocomplete";
 import type { BookSearchHit } from "@/lib/book-search-types";
+import { useLocale } from "@/components/locale-provider";
 
 export function LibraryBookSearch() {
   const router = useRouter();
+  const { messages: m } = useLocale();
 
   function onSelect(book: BookSearchHit) {
     const params = new URLSearchParams();
@@ -20,8 +22,8 @@ export function LibraryBookSearch() {
   return (
     <div className="overflow-visible rounded-2xl border border-primary/25 bg-primary/5 p-4">
       <BookSearchAutocomplete
-        label="Cari & tambah buku (Open Library)"
-        placeholder="Cari judul atau penulis…"
+        label={m.library.findAndAdd}
+        placeholder={m.library.searchTitleAuthor}
         onSelect={onSelect}
       />
     </div>

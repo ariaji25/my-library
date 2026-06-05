@@ -1,7 +1,9 @@
 import { Trash2 } from "lucide-react";
 import { getWishlistItems } from "@/lib/queries";
 import { createWishlistItem, deleteWishlistItem } from "@/lib/actions";
-import { WISHLIST_PRIORITIES, priorityLabel } from "@/lib/constants";
+import { WISHLIST_PRIORITY_VALUES } from "@/lib/constants";
+import { priorityLabel } from "@/lib/i18n";
+import { getTranslations } from "@/lib/i18n/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,60 +18,61 @@ const priorityVariant = {
 };
 
 export default async function WishlistPage() {
+  const { messages: m } = await getTranslations();
   const items = await getWishlistItems();
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-2xl font-semibold sm:text-3xl">
-          Daftar keinginan
+          {m.wishlist.title}
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground sm:mt-1 sm:text-base">
-          Buku yang ingin kamu beli atau baca berikutnya
+          {m.wishlist.subtitle}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Tambah ke daftar keinginan</CardTitle>
+          <CardTitle>{m.wishlist.addTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={createWishlistItem} className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="title">Judul *</Label>
+              <Label htmlFor="title">{m.common.title} {m.common.required}</Label>
               <Input id="title" name="title" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="author">Penulis *</Label>
+              <Label htmlFor="author">{m.common.author} {m.common.required}</Label>
               <Input id="author" name="author" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="priority">Prioritas</Label>
+              <Label htmlFor="priority">{m.common.priority}</Label>
               <select
                 id="priority"
                 name="priority"
                 className="flex h-9 w-full rounded-full border border-border bg-card px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50"
                 defaultValue="MEDIUM"
               >
-                {WISHLIST_PRIORITIES.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
+                {WISHLIST_PRIORITY_VALUES.map((value) => (
+                  <option key={value} value={value}>
+                    {priorityLabel(value, m)}
                   </option>
                 ))}
               </select>
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="notes">Catatan</Label>
+              <Label htmlFor="notes">{m.common.notes}</Label>
               <Textarea id="notes" name="notes" rows={2} />
             </div>
-            <Button type="submit">Tambah buku</Button>
+            <Button type="submit">{m.wishlist.addBook}</Button>
           </form>
         </CardContent>
       </Card>
 
       {items.length === 0 ? (
         <p className="text-center text-muted-foreground py-12">
-          Daftar keinginanmu masih kosong.
+          {m.wishlist.empty}
         </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
@@ -80,7 +83,7 @@ export default async function WishlistPage() {
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium">{item.title}</h3>
                     <Badge variant={priorityVariant[item.priority]}>
-                      {priorityLabel(item.priority)}
+                      {priorityLabel(item.priority, m)}
                     </Badge>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">

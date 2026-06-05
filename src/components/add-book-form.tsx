@@ -2,9 +2,11 @@
 
 import { useRef, useState } from "react";
 import type { BookSearchHit } from "@/lib/book-search-types";
-import { BOOK_STATUSES } from "@/lib/constants";
+import { BOOK_STATUS_VALUES } from "@/lib/constants";
+import { statusLabel } from "@/lib/i18n";
 import { BookSearchAutocomplete } from "@/components/book-search-autocomplete";
 import { CoverImageFields } from "@/components/cover-image-fields";
+import { useLocale } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +25,7 @@ type Props = {
 };
 
 export function AddBookForm({ action, defaults }: Props) {
+  const { messages: m } = useLocale();
   const formRef = useRef<HTMLFormElement>(null);
   const [coverPreview, setCoverPreview] = useState(defaults?.coverImage);
   const [coverKey, setCoverKey] = useState(
@@ -54,8 +57,8 @@ export function AddBookForm({ action, defaults }: Props) {
   return (
     <div className="space-y-6">
       <BookSearchAutocomplete
-        label="Cari buku"
-        placeholder="Cari judul atau penulis untuk mengisi otomatis…"
+        label={m.bookForm.lookup}
+        placeholder={m.bookForm.searchAutofill}
         onSelect={applySearchHit}
       />
 
@@ -66,7 +69,7 @@ export function AddBookForm({ action, defaults }: Props) {
         className="space-y-4"
       >
         <div className="space-y-2">
-          <Label htmlFor="title">Judul *</Label>
+          <Label htmlFor="title">{m.common.title} {m.common.required}</Label>
           <Input
             id="title"
             name="title"
@@ -75,7 +78,7 @@ export function AddBookForm({ action, defaults }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="author">Penulis *</Label>
+          <Label htmlFor="author">{m.common.author} {m.common.required}</Label>
           <Input
             id="author"
             name="author"
@@ -84,17 +87,17 @@ export function AddBookForm({ action, defaults }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="genre">Genre *</Label>
+          <Label htmlFor="genre">{m.common.genre} {m.common.required}</Label>
           <Input
             id="genre"
             name="genre"
             required
-            placeholder="Fiksi"
+            placeholder={m.bookForm.fictionPlaceholder}
             defaultValue={defaults?.genre}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="publishedYear">Tahun terbit</Label>
+          <Label htmlFor="publishedYear">{m.common.yearPublished}</Label>
           <Input
             id="publishedYear"
             name="publishedYear"
@@ -106,22 +109,22 @@ export function AddBookForm({ action, defaults }: Props) {
         </div>
         <CoverImageFields key={coverKey} currentCover={coverPreview} />
         <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
+          <Label htmlFor="status">{m.common.status}</Label>
           <select
             id="status"
             name="status"
             className="flex h-9 w-full rounded-full border border-border bg-card px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50"
             defaultValue="NOT_STARTED"
           >
-            {BOOK_STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
+            {BOOK_STATUS_VALUES.map((value) => (
+              <option key={value} value={value}>
+                {statusLabel(value, m)}
               </option>
             ))}
           </select>
         </div>
         <Button type="submit" className="w-full">
-          Simpan buku
+          {m.bookForm.saveBook}
         </Button>
       </form>
     </div>

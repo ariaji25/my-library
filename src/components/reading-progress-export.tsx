@@ -6,6 +6,7 @@ import {
   downloadReadingProgressPng,
   type ReadingProgressExportData,
 } from "@/lib/export-reading-progress-png";
+import { useLocale } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 
 type Props = ReadingProgressExportData & {
@@ -13,6 +14,7 @@ type Props = ReadingProgressExportData & {
 };
 
 export function ReadingProgressExport({ sessionCount, ...data }: Props) {
+  const { messages: m } = useLocale();
   const [exporting, setExporting] = useState(false);
 
   if (sessionCount === 0) return null;
@@ -20,7 +22,7 @@ export function ReadingProgressExport({ sessionCount, ...data }: Props) {
   async function handleExport() {
     setExporting(true);
     try {
-      downloadReadingProgressPng(data);
+      downloadReadingProgressPng(data, m);
     } finally {
       setExporting(false);
     }
@@ -33,8 +35,8 @@ export function ReadingProgressExport({ sessionCount, ...data }: Props) {
       size="icon"
       disabled={exporting}
       onClick={handleExport}
-      aria-label={exporting ? "Membagikan…" : "Bagikan progres baca"}
-      title="Bagikan sebagai PNG"
+      aria-label={exporting ? m.aria.sharing : m.aria.shareProgress}
+      title={m.reading.sharePng}
     >
       <Share2 className="h-4 w-4" />
     </Button>

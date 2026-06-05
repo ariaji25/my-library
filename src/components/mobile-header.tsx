@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { BookMarked } from "lucide-react";
-import { APP_NAME } from "@/lib/constants";
 import { SHELL_MAX, SHELL_PX } from "@/lib/layout-shell";
 import { cn } from "@/lib/utils";
 import { HeaderActions } from "@/components/header-actions";
+import { useLocale } from "@/components/locale-provider";
 
 export function MobileHeader({ showSignOut = false }: { showSignOut?: boolean }) {
+  const { messages } = useLocale();
+
   return (
     <header className="fixed inset-x-0 top-0 z-40 shrink-0 border-b border-border/80 bg-card/95 backdrop-blur-md md:hidden">
       <div
@@ -19,7 +21,7 @@ export function MobileHeader({ showSignOut = false }: { showSignOut?: boolean })
             <BookMarked className="h-3.5 w-3.5 text-primary" />
           </div>
           <span className="font-heading truncate text-base font-semibold leading-none">
-            {APP_NAME}
+            {messages.app.name}
           </span>
         </Link>
         <HeaderActions showSignOut={showSignOut} />

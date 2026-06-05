@@ -2,7 +2,9 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { SearchInput } from "@/components/search-input";
-import { BOOK_STATUSES, SORT_OPTIONS } from "@/lib/constants";
+import { BOOK_STATUS_VALUES, SORT_OPTIONS } from "@/lib/constants";
+import { sortLabel, statusLabel } from "@/lib/i18n";
+import { useLocale } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -16,6 +18,7 @@ const selectClass =
 export function LibraryFilters({ genres, authors }: Props) {
   const router = useRouter();
   const params = useSearchParams();
+  const { messages: m } = useLocale();
 
   function update(key: string, value: string) {
     const next = new URLSearchParams(params.toString());
@@ -28,9 +31,9 @@ export function LibraryFilters({ genres, authors }: Props) {
     <div className="flex flex-col gap-3 sm:gap-4">
       <div className="space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Filter koleksimu
+          {m.library.filterCollection}
         </p>
-        <SearchInput placeholder="Cari bukumu…" />
+        <SearchInput placeholder={m.library.searchBooks} />
       </div>
 
       <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap sm:gap-2">
@@ -38,11 +41,11 @@ export function LibraryFilters({ genres, authors }: Props) {
           className={selectClass}
           defaultValue={params.get("sort") ?? "created-desc"}
           onChange={(e) => update("sort", e.target.value)}
-          aria-label="Urutkan"
+          aria-label={m.common.sort}
         >
-          {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
+          {SORT_OPTIONS.map((value) => (
+            <option key={value} value={value}>
+              {sortLabel(value, m)}
             </option>
           ))}
         </select>
@@ -51,9 +54,9 @@ export function LibraryFilters({ genres, authors }: Props) {
           className={selectClass}
           defaultValue={params.get("genre") ?? ""}
           onChange={(e) => update("genre", e.target.value)}
-          aria-label="Filter genre"
+          aria-label={m.common.filterGenre}
         >
-          <option value="">Semua genre</option>
+          <option value="">{m.common.allGenres}</option>
           {genres.map((g) => (
             <option key={g} value={g}>
               {g}
@@ -65,12 +68,12 @@ export function LibraryFilters({ genres, authors }: Props) {
           className={selectClass}
           defaultValue={params.get("status") ?? ""}
           onChange={(e) => update("status", e.target.value)}
-          aria-label="Filter status"
+          aria-label={m.common.filterStatus}
         >
-          <option value="">Semua status</option>
-          {BOOK_STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
+          <option value="">{m.common.allStatuses}</option>
+          {BOOK_STATUS_VALUES.map((value) => (
+            <option key={value} value={value}>
+              {statusLabel(value, m)}
             </option>
           ))}
         </select>
@@ -79,12 +82,12 @@ export function LibraryFilters({ genres, authors }: Props) {
           className={cn(selectClass, "min-[420px]:col-span-2 sm:col-span-1")}
           defaultValue={params.get("rating") ?? ""}
           onChange={(e) => update("rating", e.target.value)}
-          aria-label="Filter rating"
+          aria-label={m.common.filterRating}
         >
-          <option value="">Semua rating</option>
+          <option value="">{m.common.allRatings}</option>
           {[5, 4, 3, 2, 1].map((r) => (
             <option key={r} value={String(r)}>
-              {r} bintang
+              {r} {m.common.stars}
             </option>
           ))}
         </select>
@@ -93,9 +96,9 @@ export function LibraryFilters({ genres, authors }: Props) {
           className={cn(selectClass, "sm:min-w-[10rem]")}
           defaultValue={params.get("author") ?? ""}
           onChange={(e) => update("author", e.target.value)}
-          aria-label="Filter penulis"
+          aria-label={m.common.filterAuthor}
         >
-          <option value="">Semua penulis</option>
+          <option value="">{m.common.allAuthors}</option>
           {authors.map((a) => (
             <option key={a} value={a}>
               {a}

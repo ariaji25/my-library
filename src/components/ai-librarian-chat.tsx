@@ -3,17 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Send, Sparkles } from "lucide-react";
 import type { AiChatMessage, AiMentionBook } from "@/lib/ai-types";
+import { interpolate } from "@/lib/i18n";
 import { AiBookMentionPicker } from "@/components/ai-book-mention-picker";
+import { useLocale } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-
-const SUGGESTIONS = [
-  "Buku apa yang cocok kubaca selanjutnya?",
-  "Gimana kebiasaan bacaku belakangan ini?",
-  "Dari wishlist, mana yang sebaiknya diprioritaskan?",
-  "Genre apa yang paling dominan di koleksiku?",
-];
 
 type Props = {
   configured: boolean;
@@ -21,6 +16,7 @@ type Props = {
 };
 
 export function AiLibrarianChat({ configured, initialBook }: Props) {
+  const { messages: t } = useLocale();
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [mentionedBooks, setMentionedBooks] = useState<AiMentionBook[]>(
     initialBook ? [initialBook] : []
@@ -120,17 +116,17 @@ export function AiLibrarianChat({ configured, initialBook }: Props) {
       };
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Permintaan gagal");
+        throw new Error(data.error ?? t.assistant.sendFailed);
       }
 
       if (!data.message?.content) {
-        throw new Error("Respons kosong");
+        throw new Error(t.assistant.emptyResponse);
       }
 
       setMessages((prev) => [...prev, data.message!]);
       scrollToBottom();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+      setError(err instanceof Error ? err.message : t.assistant.somethingWrong);
     } finally {
       setLoading(false);
     }
@@ -138,7 +134,7 @@ export function AiLibrarianChat({ configured, initialBook }: Props) {
 
   const bookSuggestion =
     initialBook && mentionedBooks.some((b) => b.id === initialBook.id)
-      ? `Ringkas review dan progress bacaku untuk ${initialBook.title}.`
+      ? interpolate(t.assistant.bookSuggestion, { title: initialBook.title })
       : null;
 
   return (
@@ -151,11 +147,10 @@ export function AiLibrarianChat({ configured, initialBook }: Props) {
             </div>
             <div>
               <p className="font-heading text-lg font-semibold">
-                Tanya AI Pustakawan
+                {t.assistant.askTitle}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Sebut buku pakai <strong>@</strong> atau tombol mention — bisa
-                bahas sinopsis, review, kutipan, dan progress baca kamu.
+                {t.assistant.askHint}
               </p>
             </div>
             {configured ? (
@@ -169,7 +164,7 @@ export function AiLibrarianChat({ configured, initialBook }: Props) {
                     {bookSuggestion}
                   </button>
                 )}
-                {SUGGESTIONS.map((s) => (
+                {t.assistant.suggestions.map((s: string) => (
                   <button
                     key={s}
                     type="button"
@@ -182,8 +177,7 @@ export function AiLibrarianChat({ configured, initialBook }: Props) {
               </div>
             ) : (
               <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
-                Set <code className="text-xs">OPENAI_API_KEY</code> di
-                environment supaya AI Pustakawan aktif.
+                {t.assistant.notConfigured}
               </p>
             )}
           </div>
@@ -214,7 +208,7 @@ export function AiLibrarianChat({ configured, initialBook }: Props) {
           <div className="flex justify-start">
             <div className="flex items-center gap-2 rounded-2xl border border-border/80 bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Lagi mikir…
+              {t.assistant.thinking}
             </div>
           </div>
         )}
@@ -249,12 +243,12 @@ export function AiLibrarianChat({ configured, initialBook }: Props) {
             <ul className="absolute bottom-full left-0 z-20 mb-2 max-h-40 w-full overflow-y-auto rounded-xl border border-border bg-card py-1 shadow-lg">
               {atLoading && (
                 <li className="px-3 py-2 text-sm text-muted-foreground">
-                  Mencari…
+                  {t.assistant.searching}
                 </li>
               )}
               {!atLoading && atQuery.trim() && atResults.length === 0 && (
                 <li className="px-3 py-2 text-sm text-muted-foreground">
-                  Buku tidak ketemu
+                  {t.assistant.bookNotFound}
                 </li>
               )}
               {atResults.map((book) => (
@@ -282,8 +276,8 @@ export function AiLibrarianChat({ configured, initialBook }: Props) {
             }}
             placeholder={
               configured
-                ? "Tanya apa aja… ketik @ buat sebut buku"
-                : "AI belum dikonfigurasi"
+                ? t.assistant.placeholder
+                : t.assistant.placeholderDisabled
             }
             disabled={!configured || loading}
             rows={2}
@@ -303,7 +297,7 @@ export function AiLibrarianChat({ configured, initialBook }: Props) {
             size="icon"
             className="h-11 w-11 shrink-0 rounded-full"
             disabled={!configured || loading || !input.trim()}
-            aria-label="Kirim pesan"
+            aria-label={t.aria.sendMessage}
           >
             <Send className="h-4 w-4" />
           </Button>

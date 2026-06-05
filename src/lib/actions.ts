@@ -7,7 +7,12 @@ import {
   deleteUploadedCover,
   resolveCoverFromFormData,
 } from "@/lib/cover-upload";
+import { getLocale, getMessages } from "@/lib/i18n/server";
 import { prisma } from "@/lib/prisma";
+
+async function actionMessages() {
+  return getMessages(await getLocale());
+}
 
 function revalidateAll() {
   revalidatePath("/");
@@ -25,8 +30,9 @@ export async function createBook(formData: FormData) {
     : null;
   const status = (formData.get("status") as BookStatus) || "NOT_STARTED";
 
+  const m = await actionMessages();
   if (!title || !author || !genre) {
-    throw new Error("Judul, penulis, dan genre wajib diisi");
+    throw new Error(m.errors.titleAuthorGenre);
   }
 
   const coverImage = await resolveCoverFromFormData(formData);
@@ -152,12 +158,13 @@ export async function addReadingLog(bookId: string, formData: FormData) {
   const pagesRead = Number(pagesRaw);
   const minutesRead = Number(minutesRaw);
 
-  if (!dateRaw) throw new Error("Tanggal wajib diisi");
+  const m = await actionMessages();
+  if (!dateRaw) throw new Error(m.errors.dateRequired);
   if (!Number.isFinite(pagesRead) || pagesRead < 1) {
-    throw new Error("Halaman dibaca minimal 1");
+    throw new Error(m.errors.pagesMin);
   }
   if (!Number.isFinite(minutesRead) || minutesRead < 1) {
-    throw new Error("Waktu baca minimal 1 menit");
+    throw new Error(m.errors.timeMin);
   }
 
   await prisma.readingLog.create({
@@ -196,7 +203,8 @@ export async function createWishlistItem(formData: FormData) {
   const priority = (formData.get("priority") as WishlistPriority) || "MEDIUM";
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
-  if (!title || !author) throw new Error("Judul dan penulis wajib diisi");
+  const m = await actionMessages();
+  if (!title || !author) throw new Error(m.errors.titleAuthor);
 
   await prisma.wishlistItem.create({ data: { title, author, priority, notes } });
   revalidatePath("/wishlist");
@@ -212,7 +220,8 @@ export async function deleteWishlistItem(id: string) {
 export async function createCollection(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim() || null;
-  if (!name) throw new Error("Nama wajib diisi");
+  const m = await actionMessages();
+  if (!name) throw new Error(m.errors.nameRequired);
 
   const collection = await prisma.collection.create({
     data: { name, description },

@@ -1,4 +1,6 @@
+import { exportPagesLine } from "@/lib/format";
 import { formatReadingDuration } from "@/lib/reading-stats";
+import type { Messages } from "@/lib/i18n/messages/en";
 
 export type ReadingProgressExportData = {
   bookName: string;
@@ -58,28 +60,22 @@ function sanitizeFilename(name: string): string {
     .slice(0, 60) || "book";
 }
 
-function pagesLine(pagesRead: number, totalPages: number | null): string {
-  if (totalPages && totalPages > 0) {
-    return `${pagesRead} / ${totalPages} halaman`;
-  }
-  return `${pagesRead} halaman`;
-}
-
 function buildLines(
   ctx: CanvasRenderingContext2D,
-  data: ReadingProgressExportData
+  data: ReadingProgressExportData,
+  messages: Messages
 ): TextLine[] {
   const maxTextWidth = MAX_WIDTH - PADDING_X * 2;
   const lines: TextLine[] = [];
 
   lines.push({
-    text: formatReadingDuration(data.minutesRead),
+    text: formatReadingDuration(data.minutesRead, messages),
     font: "500 22px system-ui, sans-serif",
     lineHeight: 30,
   });
 
   lines.push({
-    text: pagesLine(data.pagesRead, data.totalPages),
+    text: exportPagesLine(data.pagesRead, data.totalPages, messages),
     font: "500 22px system-ui, sans-serif",
     lineHeight: 30,
   });
@@ -148,13 +144,16 @@ function drawBookIcon(ctx: CanvasRenderingContext2D, centerX: number, y: number)
   ctx.restore();
 }
 
-export function downloadReadingProgressPng(data: ReadingProgressExportData) {
+export function downloadReadingProgressPng(
+  data: ReadingProgressExportData,
+  messages: Messages
+) {
   if (typeof document === "undefined") return;
 
   const measureCtx = document.createElement("canvas").getContext("2d");
   if (!measureCtx) return;
 
-  const lines = buildLines(measureCtx, data);
+  const lines = buildLines(measureCtx, data, messages);
   const { width, height } = measureCanvas(lines);
 
   const canvas = document.createElement("canvas");

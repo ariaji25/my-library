@@ -8,6 +8,7 @@ const PUBLIC_PATHS = [
   "/api/books/search",
   "/api/auth/login",
   "/api/auth/logout",
+  "/api/locale",
 ];
 
 function isPublicPath(pathname: string): boolean {

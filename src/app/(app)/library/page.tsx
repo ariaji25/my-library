@@ -4,7 +4,8 @@ import { Plus } from "lucide-react";
 import type { BookStatus } from "@/generated/prisma/client";
 import { getBooks, getDashboardStats } from "@/lib/queries";
 import type { SortOption } from "@/lib/constants";
-import { bookCountLabel } from "@/lib/format";
+import { bookCountInCollection } from "@/lib/i18n";
+import { getTranslations } from "@/lib/i18n/server";
 import { BookCard } from "@/components/book-card";
 import { LibraryBookSearch } from "@/components/library-book-search";
 import { LibraryFilters } from "@/components/library-filters";
@@ -24,6 +25,7 @@ export default async function LibraryPage({
 }: {
   searchParams: SearchParams;
 }) {
+  const { messages: m } = await getTranslations();
   const params = await searchParams;
   const { genres, authors } = await getDashboardStats();
 
@@ -41,16 +43,16 @@ export default async function LibraryPage({
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
         <div className="min-w-0">
           <h1 className="font-heading text-2xl font-semibold sm:text-3xl">
-            Perpustakaan
+            {m.library.title}
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground sm:mt-1 sm:text-base">
-            {bookCountLabel(books.length)} di koleksimu
+            {bookCountInCollection(books.length, m)}
           </p>
         </div>
         <Button asChild size="sm" className="w-full sm:w-auto">
           <Link href="/library/new">
             <Plus className="h-4 w-4" />
-            Tambah buku
+            {m.library.addBook}
           </Link>
         </Button>
       </div>
@@ -63,11 +65,9 @@ export default async function LibraryPage({
 
       {books.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-16 text-center">
-          <p className="text-muted-foreground">
-            Tidak ada buku yang cocok dengan filter.
-          </p>
+          <p className="text-muted-foreground">{m.library.noMatch}</p>
           <Button asChild className="mt-4">
-            <Link href="/library/new">Tambah buku pertamamu</Link>
+            <Link href="/library/new">{m.library.addFirst}</Link>
           </Button>
         </div>
       ) : (

@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import { isUploadedCoverPath } from "@/lib/cover-path";
 import { PLACEHOLDER_COVER } from "@/lib/constants";
+import { useLocale } from "@/components/locale-provider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -15,18 +18,19 @@ export function CoverImageFields({
   coverImageId = "coverImage",
   coverFileId = "coverFile",
 }: Props) {
+  const { messages: m } = useLocale();
   const preview = currentCover || PLACEHOLDER_COVER;
   const showRemove = isUploadedCoverPath(currentCover);
 
   return (
     <div className="space-y-4 md:col-span-2">
-      <Label>Sampul buku</Label>
+      <Label>{m.bookForm.coverImage}</Label>
 
       <div className="flex flex-wrap items-start gap-4">
         <div className="relative aspect-[2/3] w-24 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-muted/40 sm:w-28">
           <Image
             src={preview}
-            alt="Pratinjau sampul"
+            alt={m.bookForm.coverPreview}
             fill
             className="object-cover"
             sizes="112px"
@@ -40,7 +44,7 @@ export function CoverImageFields({
               htmlFor={coverFileId}
               className="text-sm font-normal text-muted-foreground"
             >
-              Unggah file
+              {m.bookForm.uploadFile}
             </Label>
             <Input
               id={coverFileId}
@@ -48,9 +52,7 @@ export function CoverImageFields({
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
             />
-            <p className="text-xs text-muted-foreground">
-              JPEG, PNG, WebP, atau GIF · maks. 5 MB
-            </p>
+            <p className="text-xs text-muted-foreground">{m.bookForm.uploadHint}</p>
           </div>
 
           <div className="space-y-2">
@@ -58,7 +60,7 @@ export function CoverImageFields({
               htmlFor={coverImageId}
               className="text-sm font-normal text-muted-foreground"
             >
-              Atau URL gambar
+              {m.bookForm.orImageUrl}
             </Label>
             <Input
               id={coverImageId}
@@ -81,7 +83,7 @@ export function CoverImageFields({
                 value="true"
                 className="rounded border-border"
               />
-              Hapus sampul yang diunggah
+              {m.bookForm.removeUploadedCover}
             </label>
           )}
         </div>

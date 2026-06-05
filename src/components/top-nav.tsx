@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookMarked } from "lucide-react";
-import { APP_NAME } from "@/lib/constants";
-import { NAV_ITEMS, isNavActive } from "@/lib/nav";
+import { getNavItems, isNavActive } from "@/lib/nav";
 import { SHELL_MAX, SHELL_PX } from "@/lib/layout-shell";
 import { cn } from "@/lib/utils";
 import { HeaderActions } from "@/components/header-actions";
+import { useLocale } from "@/components/locale-provider";
 
 export function TopNav({ showSignOut = false }: { showSignOut?: boolean }) {
   const pathname = usePathname();
+  const { messages } = useLocale();
+  const navItems = getNavItems(messages);
 
   return (
     <header className="sticky top-0 z-40 hidden shrink-0 border-b border-border/80 bg-card/95 backdrop-blur-md md:block">
@@ -29,15 +31,15 @@ export function TopNav({ showSignOut = false }: { showSignOut?: boolean }) {
             <BookMarked className="h-4 w-4 text-primary" strokeWidth={2} />
           </div>
           <span className="font-heading text-lg font-semibold leading-none">
-            {APP_NAME}
+            {messages.app.name}
           </span>
         </Link>
 
         <nav
           className="flex items-center gap-0.5"
-          aria-label="Navigasi utama"
+          aria-label={messages.nav.mainAria}
         >
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {navItems.map(({ href, label, icon: Icon }) => {
             const active = isNavActive(pathname, href);
             return (
               <Link

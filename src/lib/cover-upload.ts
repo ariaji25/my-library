@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { isUploadedCoverPath } from "@/lib/cover-path";
+import { getLocale, getMessages } from "@/lib/i18n/server";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "covers");
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -30,14 +31,15 @@ function extensionForMime(type: string): string {
 }
 
 export async function saveCoverUpload(file: File): Promise<string> {
+  const m = getMessages(await getLocale());
   if (file.size === 0) {
-    throw new Error("File sampul kosong");
+    throw new Error(m.errors.coverEmpty);
   }
   if (file.size > MAX_BYTES) {
-    throw new Error("Gambar sampul maksimal 5 MB");
+    throw new Error(m.errors.coverSize);
   }
   if (!ALLOWED_TYPES.has(file.type)) {
-    throw new Error("Sampul harus JPEG, PNG, WebP, atau GIF");
+    throw new Error(m.errors.coverType);
   }
 
   await mkdir(UPLOAD_DIR, { recursive: true });

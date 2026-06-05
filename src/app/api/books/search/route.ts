@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { searchExternalBooks } from "@/lib/book-search";
+import { getLocale, getMessages } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,9 @@ export async function GET(request: Request) {
       { headers: { "Cache-Control": "no-store" } }
     );
   } catch {
+    const m = getMessages(await getLocale());
     return NextResponse.json(
-      { error: "Tidak dapat mencari buku saat ini" },
+      { error: m.errors.searchFailed },
       { status: 502 }
     );
   }

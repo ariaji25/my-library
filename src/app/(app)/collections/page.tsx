@@ -2,7 +2,8 @@ import Link from "next/link";
 import { FolderOpen, Plus } from "lucide-react";
 import { getCollections } from "@/lib/queries";
 import { createCollection } from "@/lib/actions";
-import { bookCountLabel } from "@/lib/format";
+import { bookCountLabel } from "@/lib/i18n";
+import { getTranslations } from "@/lib/i18n/server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,16 +11,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function CollectionsPage() {
+  const { messages: m } = await getTranslations();
   const collections = await getCollections();
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-2xl font-semibold sm:text-3xl">
-          Koleksi
+          {m.collections.title}
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground sm:mt-1 sm:text-base">
-          Kelompok buku pilihan dari perpustakaanmu
+          {m.collections.subtitle}
         </p>
       </div>
 
@@ -27,32 +29,32 @@ export default async function CollectionsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            Koleksi baru
+            {m.collections.new}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form action={createCollection} className="space-y-4 max-w-md">
             <div className="space-y-2">
-              <Label htmlFor="name">Nama *</Label>
+              <Label htmlFor="name">{m.common.name} {m.common.required}</Label>
               <Input
                 id="name"
                 name="name"
                 required
-                placeholder="Buku terbaik 2026"
+                placeholder={m.collections.namePlaceholder}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Deskripsi</Label>
+              <Label htmlFor="description">{m.common.description}</Label>
               <Textarea id="description" name="description" rows={2} />
             </div>
-            <Button type="submit">Buat koleksi</Button>
+            <Button type="submit">{m.collections.create}</Button>
           </form>
         </CardContent>
       </Card>
 
       {collections.length === 0 ? (
         <p className="py-12 text-center text-muted-foreground">
-          Belum ada koleksi. Buat satu untuk mengelompokkan bacaan favoritmu.
+          {m.collections.empty}
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -70,7 +72,7 @@ export default async function CollectionsPage() {
                         </p>
                       )}
                       <p className="mt-3 text-xs text-muted-foreground">
-                        {bookCountLabel(col.books.length)}
+                        {bookCountLabel(col.books.length, m)}
                       </p>
                     </div>
                   </div>

@@ -8,6 +8,7 @@ import {
   subMonths,
 } from "date-fns";
 import { formatChartMonthYear } from "@/lib/format";
+import type { Locale } from "@/lib/i18n";
 
 export type ReadingLogActivityInput = {
   id: string;
@@ -94,6 +95,7 @@ export function buildDailyReadingMap(
 
 export function buildMonthlyReadingActivity(
   dailyMap: Map<string, DailyReadingActivity>,
+  locale: Locale,
   monthCount = 12,
   now = new Date()
 ): MonthlyReadingActivityPoint[] {
@@ -101,7 +103,7 @@ export function buildMonthlyReadingActivity(
     const start = startOfMonth(subMonths(now, monthCount - 1 - i));
     return {
       month: format(start, "yyyy-MM"),
-      label: formatChartMonthYear(start),
+      label: formatChartMonthYear(start, locale),
       start,
     };
   });
@@ -240,9 +242,12 @@ export function buildMonthCalendar(
   };
 }
 
-export function serializeReadingActivity(logs: ReadingLogActivityInput[]) {
+export function serializeReadingActivity(
+  logs: ReadingLogActivityInput[],
+  locale: Locale
+) {
   const dailyMap = buildDailyReadingMap(logs);
-  const monthly = buildMonthlyReadingActivity(dailyMap);
+  const monthly = buildMonthlyReadingActivity(dailyMap, locale);
   const now = new Date();
 
   return {

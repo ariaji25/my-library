@@ -9,6 +9,7 @@ import {
   isAiConfigured,
 } from "@/lib/ai-librarian";
 import type { AiChatMessage } from "@/lib/ai-types";
+import { getLocale, getMessages } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -51,12 +52,12 @@ function parseBookIds(body: unknown): string[] {
 }
 
 export async function POST(request: Request) {
+  const locale = await getLocale();
+  const m = getMessages(locale);
+
   if (!isAiConfigured()) {
     return NextResponse.json(
-      {
-        error:
-          "AI Pustakawan belum dikonfigurasi. Set OPENAI_API_KEY di environment.",
-      },
+      { error: m.errors.aiNotConfigured },
       { status: 503 }
     );
   }
@@ -65,13 +66,13 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: m.errors.invalidJson }, { status: 400 });
   }
 
   const messages = parseMessages(body);
   if (!messages) {
     return NextResponse.json(
-      { error: "Pesan tidak valid — kirim pesan pengguna yang tidak kosong." },
+      { error: m.errors.invalidMessages },
       { status: 400 }
     );
   }
@@ -86,7 +87,8 @@ export async function POST(request: Request) {
     const reply = await chatWithLibrarian(
       messages,
       libraryContext,
-      focusedBooksContext
+      focusedBooksContext,
+      locale
     );
     return NextResponse.json({ message: { role: "assistant", content: reply } });
   } catch (err) {
@@ -101,7 +103,7 @@ export async function POST(request: Request) {
     }
     console.error("[ai/chat]", err);
     return NextResponse.json(
-      { error: "Terjadi kesalahan. Coba lagi." },
+      { error: m.errors.somethingWrong },
       { status: 500 }
     );
   }

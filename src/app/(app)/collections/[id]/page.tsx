@@ -9,6 +9,7 @@ import {
   removeBookFromCollection,
 } from "@/lib/actions";
 import { PLACEHOLDER_COVER } from "@/lib/constants";
+import { getTranslations } from "@/lib/i18n/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -17,6 +18,7 @@ export default async function CollectionDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const { messages: m } = await getTranslations();
   const { id } = await params;
   const [collection, allBooks] = await Promise.all([
     getCollection(id),
@@ -35,7 +37,7 @@ export default async function CollectionDetailPage({
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Semua koleksi
+        {m.collections.all}
       </Link>
 
       <div>
@@ -50,7 +52,7 @@ export default async function CollectionDetailPage({
       {available.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Tambah buku</CardTitle>
+            <CardTitle>{m.collections.addBook}</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={addBookToCollectionForm.bind(null, id)} className="flex flex-wrap gap-3">
@@ -59,21 +61,21 @@ export default async function CollectionDetailPage({
                 className="h-9 min-w-0 flex-1 rounded-full border border-border bg-card px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 sm:min-w-[200px]"
                 required
               >
-                <option value="">Pilih buku…</option>
+                <option value="">{m.common.selectBook}</option>
                 {available.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.title} — {b.author}
                   </option>
                 ))}
               </select>
-              <Button type="submit">Tambah</Button>
+              <Button type="submit">{m.common.add}</Button>
             </form>
           </CardContent>
         </Card>
       )}
 
       {collection.books.length === 0 ? (
-        <p className="text-muted-foreground">Koleksi ini masih kosong.</p>
+        <p className="text-muted-foreground">{m.collections.emptyCollection}</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {collection.books.map(({ book }) => (
@@ -101,7 +103,7 @@ export default async function CollectionDetailPage({
                     className="mt-2"
                   >
                     <Button type="submit" variant="ghost" size="sm">
-                      Hapus
+                      {m.common.remove}
                     </Button>
                   </form>
                 </div>
@@ -114,7 +116,7 @@ export default async function CollectionDetailPage({
       <form action={deleteCollection.bind(null, id)}>
         <Button type="submit" variant="destructive">
           <Trash2 className="h-4 w-4" />
-          Hapus koleksi
+          {m.collections.delete}
         </Button>
       </form>
     </div>

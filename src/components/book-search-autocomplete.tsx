@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Loader2, Search } from "lucide-react";
 import type { BookSearchHit } from "@/lib/book-search-types";
 import { PLACEHOLDER_COVER } from "@/lib/constants";
+import { useLocale } from "@/components/locale-provider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -18,10 +19,13 @@ type Props = {
 
 export function BookSearchAutocomplete({
   onSelect,
-  label = "Cari buku",
-  placeholder = "Judul atau penulis…",
+  label,
+  placeholder,
   className,
 }: Props) {
+  const { messages: m } = useLocale();
+  const resolvedLabel = label ?? m.search.label;
+  const resolvedPlaceholder = placeholder ?? m.search.placeholder;
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -57,7 +61,7 @@ export function BookSearchAutocomplete({
 
       if (!res.ok) {
         setResults([]);
-        setError(data.error ?? "Pencarian gagal");
+        setError(data.error ?? m.search.failed);
         return;
       }
 
@@ -66,7 +70,7 @@ export function BookSearchAutocomplete({
     } catch {
       if (requestId !== requestIdRef.current) return;
       setResults([]);
-      setError("Pencarian gagal");
+      setError(m.search.failed);
     } finally {
       if (requestId === requestIdRef.current) {
         setLoading(false);
@@ -130,14 +134,14 @@ export function BookSearchAutocomplete({
 
   return (
     <div ref={rootRef} className={cn("relative space-y-2", className)}>
-      <Label htmlFor={listId}>{label}</Label>
+      <Label htmlFor={listId}>{resolvedLabel}</Label>
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           id={listId}
           type="text"
           value={query}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           autoComplete="off"
           role="combobox"
           aria-expanded={showList}
@@ -179,7 +183,7 @@ export function BookSearchAutocomplete({
             )}
             {!error && !loading && results.length === 0 && (
               <li className="px-3 py-2 text-sm text-muted-foreground">
-                Buku tidak ditemukan
+                {m.search.notFound}
               </li>
             )}
             {results.map((book, index) => (
@@ -223,9 +227,7 @@ export function BookSearchAutocomplete({
           </ul>
         )}
       </div>
-      <p className="text-xs text-muted-foreground">
-        Open Library — pilih buku untuk mengisi formulir otomatis
-      </p>
+      <p className="text-xs text-muted-foreground">{m.search.openLibraryHint}</p>
     </div>
   );
 }

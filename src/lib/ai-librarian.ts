@@ -1,7 +1,28 @@
 import type { AiChatMessage } from "@/lib/ai-types";
-import { APP_NAME } from "@/lib/constants";
+import { getMessages, type Locale } from "@/lib/i18n";
 
-const SYSTEM_PROMPT = `Kamu adalah AI Librarian untuk ${APP_NAME} — aplikasi rak buku pribadi.
+function systemPrompt(locale: Locale): string {
+  const appName = getMessages(locale).app.name;
+
+  if (locale === "en") {
+    return `You are the AI Librarian for ${appName} — a personal bookshelf app.
+Help the owner understand their collection, pick what to read next, summarize reviews, and reflect on reading habits.
+
+Tone:
+- Reply in friendly, casual English — like chatting with a book-loving friend.
+- Keep it warm and concise; light emoji is fine when it fits.
+
+Content rules:
+- Use the library data in context. Do not invent books, numbers, or plot details.
+- For mentioned books, \`externalSynopsis\` from Open Library may be used for plot/theme questions.
+- \`review\`, \`quotes\`, and \`readingSessions\` belong to the user — prioritize those for opinions and progress.
+- Do not claim full text or chapter-by-chapter knowledge; only public synopsis + their logged data.
+- If synopsis/data is missing, say so honestly.
+- Recommend mainly from their library or wishlist unless they ask otherwise.
+- Max ~300 words per answer unless they ask for more detail.`;
+  }
+
+  return `Kamu adalah AI Librarian untuk ${appName} — aplikasi rak buku pribadi.
 Bantu pemiliknya paham koleksinya, pilih bacaan berikutnya, ringkas review, dan refleksi kebiasaan baca.
 
 Gaya bahasa:
@@ -18,6 +39,7 @@ Aturan isi:
 - Kalau sinopsis/data kosong, bilang jujur.
 - Rekomendasi utamakan dari library atau wishlist mereka, kecuali diminta saran di luar itu.
 - Maksimal ~300 kata per jawaban, kecuali diminta lebih detail.`;
+}
 
 export function isAiConfigured(): boolean {
   return Boolean(process.env.OPENAI_API_KEY?.trim());
@@ -33,69 +55,54 @@ export class AiLibrarianError extends Error {
   }
 }
 
-type CompletionChunk = {
-  choices?: {
-    delta?: { content?: string };
-    message?: { content?: string };
-  }[];
-};
-
-function extractContentFromChunk(chunk: CompletionChunk): string {
-  const choice = chunk.choices?.[0];
-  return choice?.delta?.content ?? choice?.message?.content ?? "";
-}
-
-function parseSseCompletion(body: string): string {
-  let content = "";
-
-  for (const line of body.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed.startsWith("data:")) continue;
-
-    const payload = trimmed.slice(5).trim();
-    if (!payload || payload === "[DONE]") continue;
-
-    try {
-      const chunk = JSON.parse(payload) as CompletionChunk;
-      content += extractContentFromChunk(chunk);
-    } catch {
-      // skip malformed SSE lines
-    }
-  }
-
-  return content.trim();
-}
-
 function parseChatCompletionBody(
-  body: string,
+  raw: string,
   contentType: string | null
 ): string {
-  const trimmed = body.trim();
-  if (!trimmed) return "";
-
-  const isEventStream =
-    contentType?.includes("text/event-stream") || trimmed.startsWith("data:");
-
-  if (isEventStream) {
-    return parseSseCompletion(trimmed);
+  if (contentType?.includes("text/event-stream")) {
+    let content = "";
+    for (const line of raw.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const payload = trimmed.slice(5).trim();
+      if (payload === "[DONE]") break;
+      try {
+        const parsed = JSON.parse(payload) as {
+          choices?: Array<{
+            delta?: { content?: string };
+            message?: { content?: string };
+          }>;
+        };
+        const choice = parsed.choices?.[0];
+        content +=
+          choice?.message?.content ?? choice?.delta?.content ?? "";
+      } catch {
+        /* skip malformed SSE chunk */
+      }
+    }
+    return content.trim();
   }
 
-  const data = JSON.parse(trimmed) as CompletionChunk;
-  const choice = data.choices?.[0];
+  const json = JSON.parse(raw) as {
+    choices?: Array<{
+      message?: { content?: string };
+      delta?: { content?: string };
+    }>;
+  };
+  const choice = json.choices?.[0];
   return (choice?.message?.content ?? choice?.delta?.content ?? "").trim();
 }
 
 export async function chatWithLibrarian(
   messages: AiChatMessage[],
   libraryContext: string,
-  focusedBooksContext?: string | null
+  focusedBooksContext: string | null | undefined,
+  locale: Locale
 ): Promise<string> {
+  const m = getMessages(locale);
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {
-    throw new AiLibrarianError(
-      "AI belum dikonfigurasi. Set OPENAI_API_KEY di server.",
-      "NOT_CONFIGURED"
-    );
+    throw new AiLibrarianError(m.errors.aiNotConfiguredServer, "NOT_CONFIGURED");
   }
 
   const model = process.env.AI_MODEL?.trim() || "gpt-4o-mini";
@@ -112,7 +119,7 @@ export async function chatWithLibrarian(
     body: JSON.stringify({
       model,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt(locale) },
         {
           role: "user",
           content: [
@@ -124,7 +131,7 @@ export async function chatWithLibrarian(
             .filter(Boolean)
             .join("\n"),
         },
-        ...messages.map((m) => ({ role: m.role, content: m.content })),
+        ...messages.map((msg) => ({ role: msg.role, content: msg.content })),
       ],
       temperature: 0.6,
       max_tokens: 900,
@@ -136,7 +143,9 @@ export async function chatWithLibrarian(
 
   if (!response.ok) {
     throw new AiLibrarianError(
-      raw ? `Permintaan AI gagal: ${raw.slice(0, 200)}` : "Permintaan AI gagal",
+      raw
+        ? `${m.errors.aiRequestFailed}: ${raw.slice(0, 200)}`
+        : m.errors.aiRequestFailed,
       "API_ERROR"
     );
   }
@@ -148,14 +157,11 @@ export async function chatWithLibrarian(
       response.headers.get("content-type")
     );
   } catch {
-    throw new AiLibrarianError(
-      "Tidak dapat memproses respons AI",
-      "INVALID_RESPONSE"
-    );
+    throw new AiLibrarianError(m.errors.aiParseFailed, "INVALID_RESPONSE");
   }
 
   if (!content) {
-    throw new AiLibrarianError("Respons AI kosong", "INVALID_RESPONSE");
+    throw new AiLibrarianError(m.errors.aiEmpty, "INVALID_RESPONSE");
   }
 
   return content;

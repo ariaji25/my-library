@@ -1,9 +1,11 @@
+import type { Messages } from "@/lib/i18n/messages/en";
+
 export type ReadingLogSummary = {
   pagesRead: number;
   minutesRead: number;
   sessionCount: number;
-  currentPage: number;
   percentComplete: number | null;
+  currentPage: number;
 };
 
 export type ReadingLogRow = {
@@ -13,7 +15,7 @@ export type ReadingLogRow = {
 
 export function summarizeReadingLogs(
   logs: ReadingLogRow[],
-  totalPages: number | null | undefined
+  totalPages: number | null
 ): ReadingLogSummary {
   const pagesRead = logs.reduce((sum, log) => sum + log.pagesRead, 0);
   const minutesRead = logs.reduce((sum, log) => sum + log.minutesRead, 0);
@@ -27,15 +29,18 @@ export function summarizeReadingLogs(
     pagesRead,
     minutesRead,
     sessionCount: logs.length,
-    currentPage,
     percentComplete,
+    currentPage,
   };
 }
 
-export function formatReadingDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} menit`;
+export function formatReadingDuration(
+  minutes: number,
+  messages: Messages
+): string {
+  if (minutes < 60) return `${minutes} ${messages.duration.minutes}`;
   const hours = Math.floor(minutes / 60);
   const remainder = minutes % 60;
-  if (remainder === 0) return `${hours} jam`;
-  return `${hours} jam ${remainder} menit`;
+  if (remainder === 0) return `${hours} ${messages.duration.hours}`;
+  return `${hours} ${messages.duration.hours} ${remainder} ${messages.duration.minutes}`;
 }

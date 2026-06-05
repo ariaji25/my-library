@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createBook } from "@/lib/actions";
+import { getTranslations } from "@/lib/i18n/server";
 import { AddBookForm } from "@/components/add-book-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -17,6 +18,7 @@ export default async function NewBookPage({
 }: {
   searchParams: SearchParams;
 }) {
+  const { messages: m } = await getTranslations();
   const params = await searchParams;
   const year = params.year ? Number(params.year) : undefined;
 
@@ -38,12 +40,12 @@ export default async function NewBookPage({
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Kembali ke perpustakaan
+        {m.bookForm.backToLibrary}
       </Link>
 
       <Card>
         <CardHeader>
-          <CardTitle>Tambah buku</CardTitle>
+          <CardTitle>{m.bookForm.addBook}</CardTitle>
         </CardHeader>
         <CardContent>
           <AddBookForm action={createBook} defaults={defaults} />
