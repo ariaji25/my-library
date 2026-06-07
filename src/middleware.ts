@@ -28,7 +28,10 @@ function isMetadataPath(pathname: string): boolean {
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
     pathname === "/manifest.webmanifest" ||
-    pathname === "/manifest.json"
+    pathname === "/manifest.json" ||
+    pathname === "/icon-192.png" ||
+    pathname === "/icon-512.png" ||
+    pathname === "/apple-touch-icon.png"
   );
 }
 
@@ -64,6 +67,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|sitemap.xml|robots.txt|manifest.webmanifest|manifest.json).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|icon-192.png|icon-512.png|apple-touch-icon.png|sitemap.xml|robots.txt|manifest.webmanifest|manifest.json).*)",
   ],
 };

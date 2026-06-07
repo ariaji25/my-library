@@ -51,6 +51,7 @@ Auth: no DB users — env-only admin. Session cookie signed with email+password.
 - **Find & add book**: `LibraryBookSearch` on `/library` (outside Suspense) + lookup on `/library/new` (`AddBookForm`)
 - Book CRUD, status, ratings, reviews, quotes, wishlist, collections
 - **Cover upload**: `public/uploads/covers/` + URL; `src/lib/cover-upload.ts`; Docker volume `cover_uploads`
+- **PWA**: `src/app/manifest.ts` + `public/icon-{192,512}.png`; middleware must allow manifest + icon paths when auth is on
 
 ## Book search (Open Library)
 

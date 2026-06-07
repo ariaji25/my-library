@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Nunito } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LocaleProvider } from "@/components/locale-provider";
@@ -17,14 +17,33 @@ const cormorant = Cormorant_Garamond({
   weight: ["500", "600", "700"],
 });
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#e879a9" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1218" },
+  ],
+  colorScheme: "light dark",
+};
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const messages = getMessages(locale);
   return {
     title: messages.app.name,
     description: messages.app.description,
+    applicationName: messages.app.name,
+    appleWebApp: {
+      capable: true,
+      title: messages.app.name,
+      statusBarStyle: "default",
+    },
     icons: {
-      icon: [{ url: "/favicon.ico", sizes: "any" }],
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
       shortcut: "/favicon.ico",
     },
   };
