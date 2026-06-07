@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { isCoverScanConfigured } from "@/lib/cover-scan-ai";
 import { getCoverStorageMode } from "@/lib/cover-storage";
-import { createBook } from "@/lib/actions";
 import { getTranslations } from "@/lib/i18n/server";
 import { AddBookForm } from "@/components/add-book-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,7 +52,6 @@ export default async function NewBookPage({
         </CardHeader>
         <CardContent>
           <AddBookForm
-            action={createBook}
             defaults={defaults}
             coverScanConfigured={coverScanConfigured}
             coverStorage={coverStorage}

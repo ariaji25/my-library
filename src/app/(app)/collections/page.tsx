@@ -1,13 +1,9 @@
 import Link from "next/link";
 import { FolderOpen, Plus } from "lucide-react";
 import { getCollections } from "@/lib/queries";
-import { createCollection } from "@/lib/actions";
 import { bookCountLabel } from "@/lib/i18n";
 import { getTranslations } from "@/lib/i18n/server";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { CreateCollectionForm } from "@/components/create-collection-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function CollectionsPage() {
@@ -33,22 +29,7 @@ export default async function CollectionsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createCollection} className="space-y-4 max-w-md">
-            <div className="space-y-2">
-              <Label htmlFor="name">{m.common.name} {m.common.required}</Label>
-              <Input
-                id="name"
-                name="name"
-                required
-                placeholder={m.collections.namePlaceholder}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">{m.common.description}</Label>
-              <Textarea id="description" name="description" rows={2} />
-            </div>
-            <Button type="submit">{m.collections.create}</Button>
-          </form>
+          <CreateCollectionForm />
         </CardContent>
       </Card>
 

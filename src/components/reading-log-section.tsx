@@ -1,17 +1,13 @@
-import { format } from "date-fns";
-import { Clock, Quote, Trash2 } from "lucide-react";
+import { Clock, Quote } from "lucide-react";
 import type { ReadingLog } from "@/generated/prisma/client";
-import { addReadingLog, deleteReadingLog } from "@/lib/actions";
 import { getTranslations } from "@/lib/i18n/server";
 import { formatAppDate } from "@/lib/format";
 import {
   formatReadingDuration,
   summarizeReadingLogs,
 } from "@/lib/reading-stats";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { ReadingLogForm } from "@/components/reading-log-form";
+import { DeleteReadingLogButton } from "@/components/delete-reading-log-button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReadingProgressExport } from "@/components/reading-progress-export";
@@ -32,7 +28,6 @@ export async function ReadingLogSection({
 }: Props) {
   const { locale, messages: m } = await getTranslations();
   const stats = summarizeReadingLogs(logs, totalPages);
-  const today = format(new Date(), "yyyy-MM-dd");
 
   return (
     <Card>
@@ -103,55 +98,7 @@ export async function ReadingLogSection({
           </div>
         )}
 
-        <form
-          action={addReadingLog.bind(null, bookId)}
-          className="grid gap-4 rounded-2xl border border-border/80 p-4 sm:grid-cols-2"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="reading-date">{m.common.date}</Label>
-            <Input
-              id="reading-date"
-              name="date"
-              type="date"
-              defaultValue={today}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="pagesRead">{m.reading.pagesRead}</Label>
-            <Input
-              id="pagesRead"
-              name="pagesRead"
-              type="number"
-              min={1}
-              placeholder={`${m.common.example} 25`}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="minutesRead">{m.reading.readingTimeMinutes}</Label>
-            <Input
-              id="minutesRead"
-              name="minutesRead"
-              type="number"
-              min={1}
-              placeholder={`${m.common.example} 45`}
-              required
-            />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="quoteOfTheDay">{m.reading.quoteOfDay}</Label>
-            <Textarea
-              id="quoteOfTheDay"
-              name="quoteOfTheDay"
-              rows={2}
-              placeholder={m.reading.quotePlaceholder}
-            />
-          </div>
-          <Button type="submit" className="sm:col-span-2 sm:w-fit">
-            {m.bookForm.logReading}
-          </Button>
-        </form>
+        <ReadingLogForm bookId={bookId} />
 
         {logs.length === 0 ? (
           <p className="text-sm text-muted-foreground">{m.reading.noSessions}</p>
@@ -183,11 +130,7 @@ export async function ReadingLogSection({
                       </p>
                     )}
                   </div>
-                  <form action={deleteReadingLog.bind(null, log.id, bookId)}>
-                    <Button type="submit" variant="ghost" size="icon">
-                      <Trash2 className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </form>
+                  <DeleteReadingLogButton logId={log.id} bookId={bookId} />
                 </div>
               </li>
             ))}

@@ -5,7 +5,13 @@ import { PLACEHOLDER_COVER } from "@/lib/constants";
 import { StarRating } from "@/components/star-rating";
 import { StatusBadge } from "@/components/status-badge";
 
-export function BookCard({ book }: { book: Book }) {
+export function BookCard({
+  book,
+  priority = false,
+}: {
+  book: Book;
+  priority?: boolean;
+}) {
   const cover = book.coverImage || PLACEHOLDER_COVER;
 
   return (
@@ -20,6 +26,8 @@ export function BookCard({ book }: { book: Book }) {
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           sizes="(max-width: 380px) 50vw, (max-width: 640px) 33vw, (max-width: 1024px) 25vw, 16vw"
+          loading={priority ? undefined : "lazy"}
+          priority={priority}
           unoptimized
         />
       </div>

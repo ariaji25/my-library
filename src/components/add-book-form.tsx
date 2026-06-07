@@ -1,6 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
+import { createBook } from "@/lib/actions";
+import type { ActionResult } from "@/lib/action-result";
+import { useActionToast } from "@/hooks/use-action-toast";
 import type { BookSearchHit } from "@/lib/book-search-types";
 import { attachCoverToForm } from "@/lib/attach-cover-to-form";
 import { BOOK_STATUS_VALUES } from "@/lib/constants";
@@ -10,7 +13,7 @@ import { BookCoverScan } from "@/components/book-cover-scan";
 import { BookSearchAutocomplete } from "@/components/book-search-autocomplete";
 import { CoverImageFields } from "@/components/cover-image-fields";
 import { useLocale } from "@/components/locale-provider";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -23,19 +26,23 @@ export type AddBookFormDefaults = {
 };
 
 type Props = {
-  action: (formData: FormData) => Promise<void>;
   defaults?: AddBookFormDefaults;
   coverScanConfigured?: boolean;
   coverStorage?: CoverStorageMode;
 };
 
 export function AddBookForm({
-  action,
   defaults,
   coverScanConfigured,
   coverStorage = "disk",
 }: Props) {
   const { messages: m } = useLocale();
+  const [state, formAction] = useActionState<ActionResult | null, FormData>(
+    createBook,
+    null
+  );
+
+  useActionToast(state, { successMessage: m.bookForm.saveSuccess });
   const formRef = useRef<HTMLFormElement>(null);
   const [coverPreview, setCoverPreview] = useState(defaults?.coverImage);
   const [coverKey, setCoverKey] = useState(
@@ -110,7 +117,7 @@ export function AddBookForm({
 
       <form
         ref={formRef}
-        action={action}
+        action={formAction}
         encType="multipart/form-data"
         className="space-y-4"
       >
@@ -173,9 +180,9 @@ export function AddBookForm({
             ))}
           </select>
         </div>
-        <Button type="submit" className="w-full">
+        <SubmitButton className="w-full" pendingLabel={m.common.saving}>
           {m.bookForm.saveBook}
-        </Button>
+        </SubmitButton>
       </form>
     </div>
   );

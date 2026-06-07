@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import type { BookStatus, WishlistPriority } from "@/generated/prisma/client";
+import type { ActionResult } from "@/lib/action-result";
 import {
   deleteUploadedCover,
   resolveCoverFromFormData,
@@ -21,242 +21,404 @@ function revalidateAll() {
   revalidatePath("/collections");
 }
 
-export async function createBook(formData: FormData) {
-  const title = String(formData.get("title") ?? "").trim();
-  const author = String(formData.get("author") ?? "").trim();
-  const genre = String(formData.get("genre") ?? "").trim();
-  const publishedYear = formData.get("publishedYear")
-    ? Number(formData.get("publishedYear"))
-    : null;
-  const status = (formData.get("status") as BookStatus) || "NOT_STARTED";
-
-  const m = await actionMessages();
-  if (!title || !author || !genre) {
-    throw new Error(m.errors.titleAuthorGenre);
-  }
-
-  const coverImage = await resolveCoverFromFormData(formData);
-
-  const book = await prisma.book.create({
-    data: {
-      title,
-      author,
-      genre,
-      publishedYear,
-      coverImage,
-      status,
-    },
-  });
-
-  revalidateAll();
-  redirect(`/books/${book.id}`);
+function fail(err: unknown, fallback: string): ActionResult {
+  return {
+    ok: false,
+    error: err instanceof Error ? err.message : fallback,
+  };
 }
 
-export async function updateBook(id: string, formData: FormData) {
-  const title = String(formData.get("title") ?? "").trim();
-  const author = String(formData.get("author") ?? "").trim();
-  const genre = String(formData.get("genre") ?? "").trim();
-  const publishedYear = formData.get("publishedYear")
-    ? Number(formData.get("publishedYear"))
-    : null;
-  const status = formData.get("status") as BookStatus;
-  const rating = formData.get("rating") ? Number(formData.get("rating")) : null;
-  const totalPagesRaw = formData.get("totalPages");
-  const totalPages =
-    totalPagesRaw && String(totalPagesRaw).trim()
-      ? Number(totalPagesRaw)
+export async function createBook(
+  _prev: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    const title = String(formData.get("title") ?? "").trim();
+    const author = String(formData.get("author") ?? "").trim();
+    const genre = String(formData.get("genre") ?? "").trim();
+    const publishedYear = formData.get("publishedYear")
+      ? Number(formData.get("publishedYear"))
       : null;
-  const review = String(formData.get("review") ?? "").trim() || null;
-  const startedAt = formData.get("startedAt")
-    ? new Date(String(formData.get("startedAt")))
-    : null;
-  const completedAt = formData.get("completedAt")
-    ? new Date(String(formData.get("completedAt")))
-    : null;
+    const status = (formData.get("status") as BookStatus) || "NOT_STARTED";
 
-  const existing = await prisma.book.findUnique({
-    where: { id },
-    select: { coverImage: true },
-  });
-  const coverImage = await resolveCoverFromFormData(
-    formData,
-    existing?.coverImage
-  );
+    if (!title || !author || !genre) {
+      return { ok: false, error: m.errors.titleAuthorGenre };
+    }
 
-  await prisma.book.update({
-    where: { id },
-    data: {
-      title,
-      author,
-      genre,
-      publishedYear,
-      coverImage,
-      status,
-      rating: rating && rating >= 1 && rating <= 5 ? rating : null,
-      totalPages:
-        totalPages && Number.isFinite(totalPages) && totalPages > 0
-          ? Math.round(totalPages)
-          : null,
-      review,
-      startedAt,
-      completedAt,
-      ...(status === "READING" && !startedAt && { startedAt: new Date() }),
-      ...(status === "COMPLETED" && !completedAt && { completedAt: new Date() }),
-    },
-  });
+    const coverImage = await resolveCoverFromFormData(formData);
 
-  revalidatePath(`/books/${id}`);
-  revalidateAll();
-}
-
-export async function deleteBook(id: string) {
-  const book = await prisma.book.findUnique({
-    where: { id },
-    select: { coverImage: true },
-  });
-  await prisma.book.delete({ where: { id } });
-  await deleteUploadedCover(book?.coverImage);
-  revalidateAll();
-  redirect("/library");
-}
-
-export async function updateBookStatus(id: string, status: BookStatus) {
-  const data: {
-    status: BookStatus;
-    startedAt?: Date;
-    completedAt?: Date;
-  } = { status };
-
-  if (status === "READING") data.startedAt = new Date();
-  if (status === "COMPLETED") data.completedAt = new Date();
-
-  await prisma.book.update({ where: { id }, data });
-  revalidatePath(`/books/${id}`);
-  revalidateAll();
-}
-
-export async function addQuote(bookId: string, formData: FormData) {
-  const content = String(formData.get("content") ?? "").trim();
-  if (!content) return;
-
-  await prisma.quote.create({ data: { bookId, content } });
-  revalidatePath(`/books/${bookId}`);
-}
-
-export async function deleteQuote(quoteId: string, bookId: string) {
-  await prisma.quote.delete({ where: { id: quoteId } });
-  revalidatePath(`/books/${bookId}`);
-}
-
-export async function addReadingLog(bookId: string, formData: FormData) {
-  const dateRaw = String(formData.get("date") ?? "").trim();
-  const pagesRaw = formData.get("pagesRead");
-  const minutesRaw = formData.get("minutesRead");
-  const quoteOfTheDay =
-    String(formData.get("quoteOfTheDay") ?? "").trim() || null;
-
-  const pagesRead = Number(pagesRaw);
-  const minutesRead = Number(minutesRaw);
-
-  const m = await actionMessages();
-  if (!dateRaw) throw new Error(m.errors.dateRequired);
-  if (!Number.isFinite(pagesRead) || pagesRead < 1) {
-    throw new Error(m.errors.pagesMin);
-  }
-  if (!Number.isFinite(minutesRead) || minutesRead < 1) {
-    throw new Error(m.errors.timeMin);
-  }
-
-  await prisma.readingLog.create({
-    data: {
-      bookId,
-      date: new Date(dateRaw),
-      pagesRead: Math.round(pagesRead),
-      minutesRead: Math.round(minutesRead),
-      quoteOfTheDay,
-    },
-  });
-
-  const book = await prisma.book.findUnique({
-    where: { id: bookId },
-    select: { status: true, startedAt: true },
-  });
-  if (book && book.status === "NOT_STARTED") {
-    await prisma.book.update({
-      where: { id: bookId },
-      data: { status: "READING", startedAt: book.startedAt ?? new Date(dateRaw) },
+    const book = await prisma.book.create({
+      data: {
+        title,
+        author,
+        genre,
+        publishedYear,
+        coverImage,
+        status,
+      },
     });
+
     revalidateAll();
+    return { ok: true, bookId: book.id };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
   }
-
-  revalidatePath(`/books/${bookId}`);
 }
 
-export async function deleteReadingLog(logId: string, bookId: string) {
-  await prisma.readingLog.delete({ where: { id: logId } });
-  revalidatePath(`/books/${bookId}`);
-}
-
-export async function createWishlistItem(formData: FormData) {
-  const title = String(formData.get("title") ?? "").trim();
-  const author = String(formData.get("author") ?? "").trim();
-  const priority = (formData.get("priority") as WishlistPriority) || "MEDIUM";
-  const notes = String(formData.get("notes") ?? "").trim() || null;
-
+export async function updateBook(
+  id: string,
+  _prev: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
   const m = await actionMessages();
-  if (!title || !author) throw new Error(m.errors.titleAuthor);
 
-  await prisma.wishlistItem.create({ data: { title, author, priority, notes } });
-  revalidatePath("/wishlist");
-  revalidatePath("/");
+  try {
+    const title = String(formData.get("title") ?? "").trim();
+    const author = String(formData.get("author") ?? "").trim();
+    const genre = String(formData.get("genre") ?? "").trim();
+    const publishedYear = formData.get("publishedYear")
+      ? Number(formData.get("publishedYear"))
+      : null;
+    const status = formData.get("status") as BookStatus;
+    const rating = formData.get("rating") ? Number(formData.get("rating")) : null;
+    const totalPagesRaw = formData.get("totalPages");
+    const totalPages =
+      totalPagesRaw && String(totalPagesRaw).trim()
+        ? Number(totalPagesRaw)
+        : null;
+    const review = String(formData.get("review") ?? "").trim() || null;
+    const startedAt = formData.get("startedAt")
+      ? new Date(String(formData.get("startedAt")))
+      : null;
+    const completedAt = formData.get("completedAt")
+      ? new Date(String(formData.get("completedAt")))
+      : null;
+
+    if (!title || !author || !genre) {
+      return { ok: false, error: m.errors.titleAuthorGenre };
+    }
+
+    const existing = await prisma.book.findUnique({
+      where: { id },
+      select: { coverImage: true },
+    });
+    const coverImage = await resolveCoverFromFormData(
+      formData,
+      existing?.coverImage
+    );
+
+    await prisma.book.update({
+      where: { id },
+      data: {
+        title,
+        author,
+        genre,
+        publishedYear,
+        coverImage,
+        status,
+        rating: rating && rating >= 1 && rating <= 5 ? rating : null,
+        totalPages:
+          totalPages && Number.isFinite(totalPages) && totalPages > 0
+            ? Math.round(totalPages)
+            : null,
+        review,
+        startedAt,
+        completedAt,
+        ...(status === "READING" && !startedAt && { startedAt: new Date() }),
+        ...(status === "COMPLETED" && !completedAt && {
+          completedAt: new Date(),
+        }),
+      },
+    });
+
+    revalidatePath(`/books/${id}`);
+    revalidateAll();
+    return { ok: true };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
 }
 
-export async function deleteWishlistItem(id: string) {
-  await prisma.wishlistItem.delete({ where: { id } });
-  revalidatePath("/wishlist");
-  revalidatePath("/");
-}
-
-export async function createCollection(formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim() || null;
+export async function deleteBook(
+  id: string,
+  _prev: ActionResult | null,
+  _formData: FormData
+): Promise<ActionResult> {
   const m = await actionMessages();
-  if (!name) throw new Error(m.errors.nameRequired);
 
-  const collection = await prisma.collection.create({
-    data: { name, description },
-  });
-
-  revalidatePath("/collections");
-  redirect(`/collections/${collection.id}`);
+  try {
+    const book = await prisma.book.findUnique({
+      where: { id },
+      select: { coverImage: true },
+    });
+    await prisma.book.delete({ where: { id } });
+    await deleteUploadedCover(book?.coverImage);
+    revalidateAll();
+    return { ok: true, redirectTo: "/library" };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
 }
 
-export async function deleteCollection(id: string) {
-  await prisma.collection.delete({ where: { id } });
-  revalidatePath("/collections");
-  redirect("/collections");
+export async function updateBookStatus(
+  id: string,
+  status: BookStatus,
+  _prev: ActionResult | null,
+  _formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    const data: {
+      status: BookStatus;
+      startedAt?: Date;
+      completedAt?: Date;
+    } = { status };
+
+    if (status === "READING") data.startedAt = new Date();
+    if (status === "COMPLETED") data.completedAt = new Date();
+
+    await prisma.book.update({ where: { id }, data });
+    revalidatePath(`/books/${id}`);
+    revalidateAll();
+    return { ok: true };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
+}
+
+export async function addQuote(
+  bookId: string,
+  _prev: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    const content = String(formData.get("content") ?? "").trim();
+    if (!content) {
+      return { ok: false, error: m.errors.quoteRequired };
+    }
+
+    await prisma.quote.create({ data: { bookId, content } });
+    revalidatePath(`/books/${bookId}`);
+    return { ok: true };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
+}
+
+export async function deleteQuote(
+  quoteId: string,
+  bookId: string,
+  _prev: ActionResult | null,
+  _formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    await prisma.quote.delete({ where: { id: quoteId } });
+    revalidatePath(`/books/${bookId}`);
+    return { ok: true };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
+}
+
+export async function addReadingLog(
+  bookId: string,
+  _prev: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    const dateRaw = String(formData.get("date") ?? "").trim();
+    const pagesRaw = formData.get("pagesRead");
+    const minutesRaw = formData.get("minutesRead");
+    const quoteOfTheDay =
+      String(formData.get("quoteOfTheDay") ?? "").trim() || null;
+
+    const pagesRead = Number(pagesRaw);
+    const minutesRead = Number(minutesRaw);
+
+    if (!dateRaw) return { ok: false, error: m.errors.dateRequired };
+    if (!Number.isFinite(pagesRead) || pagesRead < 1) {
+      return { ok: false, error: m.errors.pagesMin };
+    }
+    if (!Number.isFinite(minutesRead) || minutesRead < 1) {
+      return { ok: false, error: m.errors.timeMin };
+    }
+
+    await prisma.readingLog.create({
+      data: {
+        bookId,
+        date: new Date(dateRaw),
+        pagesRead: Math.round(pagesRead),
+        minutesRead: Math.round(minutesRead),
+        quoteOfTheDay,
+      },
+    });
+
+    const book = await prisma.book.findUnique({
+      where: { id: bookId },
+      select: { status: true, startedAt: true },
+    });
+    if (book && book.status === "NOT_STARTED") {
+      await prisma.book.update({
+        where: { id: bookId },
+        data: {
+          status: "READING",
+          startedAt: book.startedAt ?? new Date(dateRaw),
+        },
+      });
+      revalidateAll();
+    }
+
+    revalidatePath(`/books/${bookId}`);
+    return { ok: true };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
+}
+
+export async function deleteReadingLog(
+  logId: string,
+  bookId: string,
+  _prev: ActionResult | null,
+  _formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    await prisma.readingLog.delete({ where: { id: logId } });
+    revalidatePath(`/books/${bookId}`);
+    return { ok: true };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
+}
+
+export async function createWishlistItem(
+  _prev: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    const title = String(formData.get("title") ?? "").trim();
+    const author = String(formData.get("author") ?? "").trim();
+    const priority = (formData.get("priority") as WishlistPriority) || "MEDIUM";
+    const notes = String(formData.get("notes") ?? "").trim() || null;
+
+    if (!title || !author) {
+      return { ok: false, error: m.errors.titleAuthor };
+    }
+
+    await prisma.wishlistItem.create({ data: { title, author, priority, notes } });
+    revalidatePath("/wishlist");
+    revalidatePath("/");
+    return { ok: true };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
+}
+
+export async function deleteWishlistItem(
+  id: string,
+  _prev: ActionResult | null,
+  _formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    await prisma.wishlistItem.delete({ where: { id } });
+    revalidatePath("/wishlist");
+    revalidatePath("/");
+    return { ok: true };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
+}
+
+export async function createCollection(
+  _prev: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    const name = String(formData.get("name") ?? "").trim();
+    const description = String(formData.get("description") ?? "").trim() || null;
+    if (!name) return { ok: false, error: m.errors.nameRequired };
+
+    const collection = await prisma.collection.create({
+      data: { name, description },
+    });
+
+    revalidatePath("/collections");
+    return { ok: true, redirectTo: `/collections/${collection.id}` };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
+}
+
+export async function deleteCollection(
+  id: string,
+  _prev: ActionResult | null,
+  _formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    await prisma.collection.delete({ where: { id } });
+    revalidatePath("/collections");
+    return { ok: true, redirectTo: "/collections" };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
 }
 
 export async function addBookToCollectionForm(
   collectionId: string,
+  _prev: ActionResult | null,
   formData: FormData
-) {
-  const bookId = String(formData.get("bookId") ?? "");
-  if (bookId) await addBookToCollection(collectionId, bookId);
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    const bookId = String(formData.get("bookId") ?? "");
+    if (!bookId) return { ok: false, error: m.errors.selectBookRequired };
+
+    await prisma.collectionBook.upsert({
+      where: { collectionId_bookId: { collectionId, bookId } },
+      create: { collectionId, bookId },
+      update: {},
+    });
+    revalidatePath(`/collections/${collectionId}`);
+    return { ok: true };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
 }
 
-export async function addBookToCollection(collectionId: string, bookId: string) {
-  await prisma.collectionBook.upsert({
-    where: { collectionId_bookId: { collectionId, bookId } },
-    create: { collectionId, bookId },
-    update: {},
-  });
-  revalidatePath(`/collections/${collectionId}`);
-}
+export async function removeBookFromCollection(
+  collectionId: string,
+  bookId: string,
+  _prev: ActionResult | null,
+  _formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
 
-export async function removeBookFromCollection(collectionId: string, bookId: string) {
-  await prisma.collectionBook.delete({
-    where: { collectionId_bookId: { collectionId, bookId } },
-  });
-  revalidatePath(`/collections/${collectionId}`);
+  try {
+    await prisma.collectionBook.delete({
+      where: { collectionId_bookId: { collectionId, bookId } },
+    });
+    revalidatePath(`/collections/${collectionId}`);
+    return { ok: true };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
 }

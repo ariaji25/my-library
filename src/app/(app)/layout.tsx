@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { ToastProvider } from "@/components/toast-provider";
 import { TopNav } from "@/components/top-nav";
 import { MobileHeader } from "@/components/mobile-header";
 import { MobileNav } from "@/components/mobile-nav";
@@ -15,11 +16,12 @@ export default function AppLayout({
   const showSignOut = isAuthEnabled();
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <TopNav showSignOut={showSignOut} />
-      <MobileHeader showSignOut={showSignOut} />
+    <ToastProvider>
+      <div className="flex min-h-dvh flex-col">
+        <TopNav showSignOut={showSignOut} />
+        <MobileHeader showSignOut={showSignOut} />
 
-      <main
+        <main
         className={cn(
           "flex-1",
           /* mobile: clear fixed header + bottom nav */
@@ -38,7 +40,8 @@ export default function AppLayout({
         </div>
       </main>
 
-      <MobileNav />
-    </div>
+        <MobileNav />
+      </div>
+    </ToastProvider>
   );
 }

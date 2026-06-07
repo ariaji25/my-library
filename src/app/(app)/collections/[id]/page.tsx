@@ -1,16 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { getCollection, getBooks } from "@/lib/queries";
-import {
-  addBookToCollectionForm,
-  deleteCollection,
-  removeBookFromCollection,
-} from "@/lib/actions";
 import { PLACEHOLDER_COVER } from "@/lib/constants";
 import { getTranslations } from "@/lib/i18n/server";
-import { Button } from "@/components/ui/button";
+import { AddBookToCollectionForm } from "@/components/add-book-to-collection-form";
+import { RemoveBookFromCollectionButton } from "@/components/remove-book-from-collection-button";
+import { DeleteCollectionButton } from "@/components/delete-collection-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function CollectionDetailPage({
@@ -55,21 +52,14 @@ export default async function CollectionDetailPage({
             <CardTitle>{m.collections.addBook}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={addBookToCollectionForm.bind(null, id)} className="flex flex-wrap gap-3">
-              <select
-                name="bookId"
-                className="h-9 min-w-0 flex-1 rounded-full border border-border bg-card px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 sm:min-w-[200px]"
-                required
-              >
-                <option value="">{m.common.selectBook}</option>
-                {available.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.title} — {b.author}
-                  </option>
-                ))}
-              </select>
-              <Button type="submit">{m.common.add}</Button>
-            </form>
+            <AddBookToCollectionForm
+              collectionId={id}
+              books={available.map((b) => ({
+                id: b.id,
+                title: b.title,
+                author: b.author,
+              }))}
+            />
           </CardContent>
         </Card>
       )}
@@ -87,6 +77,8 @@ export default async function CollectionDetailPage({
                     alt={book.title}
                     fill
                     className="object-cover"
+                    sizes="64px"
+                    loading="lazy"
                     unoptimized
                   />
                 </div>
@@ -98,14 +90,10 @@ export default async function CollectionDetailPage({
                     {book.title}
                   </Link>
                   <p className="text-sm text-muted-foreground">{book.author}</p>
-                  <form
-                    action={removeBookFromCollection.bind(null, id, book.id)}
-                    className="mt-2"
-                  >
-                    <Button type="submit" variant="ghost" size="sm">
-                      {m.common.remove}
-                    </Button>
-                  </form>
+                  <RemoveBookFromCollectionButton
+                    collectionId={id}
+                    bookId={book.id}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -113,12 +101,7 @@ export default async function CollectionDetailPage({
         </div>
       )}
 
-      <form action={deleteCollection.bind(null, id)}>
-        <Button type="submit" variant="destructive">
-          <Trash2 className="h-4 w-4" />
-          {m.collections.delete}
-        </Button>
-      </form>
+      <DeleteCollectionButton collectionId={id} />
     </div>
   );
 }

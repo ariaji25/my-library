@@ -1,6 +1,6 @@
 import type { BookStatus, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { SortOption } from "@/lib/constants";
+import { LIBRARY_PAGE_SIZE, type SortOption } from "@/lib/constants";
 import {
   buildWeeklyProgress,
   getCurrentWeekProgress,
@@ -16,6 +16,15 @@ export type BookFilters = {
   rating?: number;
   author?: string;
   sort?: SortOption;
+  page?: number;
+};
+
+export type PaginatedBooks = {
+  books: Awaited<ReturnType<typeof prisma.book.findMany>>;
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 };
 
 function buildOrderBy(sort: SortOption = "created-desc"): Prisma.BookOrderByWithRelationInput {
@@ -39,10 +48,10 @@ function buildOrderBy(sort: SortOption = "created-desc"): Prisma.BookOrderByWith
   }
 }
 
-export async function getBooks(filters: BookFilters = {}) {
-  const { q, genre, status, rating, author, sort } = filters;
+function buildBookWhere(filters: BookFilters): Prisma.BookWhereInput {
+  const { q, genre, status, rating, author } = filters;
 
-  const where: Prisma.BookWhereInput = {
+  return {
     ...(genre && { genre }),
     ...(status && { status }),
     ...(rating != null && { rating }),
@@ -56,12 +65,45 @@ export async function getBooks(filters: BookFilters = {}) {
       ],
     }),
   };
+}
+
+export async function getBooks(filters: BookFilters = {}) {
+  const { sort } = filters;
 
   return prisma.book.findMany({
-    where,
+    where: buildBookWhere(filters),
     orderBy: buildOrderBy(sort),
     include: { quotes: true },
   });
+}
+
+export async function getBooksPaginated(
+  filters: BookFilters = {}
+): Promise<PaginatedBooks> {
+  const { sort, page: pageRaw } = filters;
+  const page = Math.max(1, pageRaw ?? 1);
+  const where = buildBookWhere(filters);
+
+  const [books, total] = await Promise.all([
+    prisma.book.findMany({
+      where,
+      orderBy: buildOrderBy(sort),
+      include: { quotes: true },
+      skip: (page - 1) * LIBRARY_PAGE_SIZE,
+      take: LIBRARY_PAGE_SIZE,
+    }),
+    prisma.book.count({ where }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / LIBRARY_PAGE_SIZE));
+
+  return {
+    books,
+    total,
+    page: Math.min(page, totalPages),
+    pageSize: LIBRARY_PAGE_SIZE,
+    totalPages,
+  };
 }
 
 export async function getBook(id: string) {
