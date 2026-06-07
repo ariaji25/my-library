@@ -17,6 +17,21 @@ function isPublicPath(pathname: string): boolean {
   );
 }
 
+/** Next.js metadata routes — must stay public when auth is enabled */
+function isMetadataPath(pathname: string): boolean {
+  return (
+    pathname === "/favicon.ico" ||
+    pathname === "/icon" ||
+    pathname.startsWith("/icon.") ||
+    pathname === "/apple-icon" ||
+    pathname.startsWith("/apple-icon.") ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/manifest.json"
+  );
+}
+
 export async function middleware(request: NextRequest) {
   if (!isAuthEnabled()) {
     return NextResponse.next();
@@ -26,8 +41,8 @@ export async function middleware(request: NextRequest) {
 
   if (
     isPublicPath(pathname) ||
-    pathname.startsWith("/_next/") ||
-    pathname === "/favicon.ico"
+    isMetadataPath(pathname) ||
+    pathname.startsWith("/_next/")
   ) {
     return NextResponse.next();
   }
@@ -48,5 +63,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|sitemap.xml|robots.txt|manifest.webmanifest|manifest.json).*)",
+  ],
 };

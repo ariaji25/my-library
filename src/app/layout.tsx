@@ -23,6 +23,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: messages.app.name,
     description: messages.app.description,
+    icons: {
+      icon: [{ url: "/favicon.ico", sizes: "any" }],
+      shortcut: "/favicon.ico",
+    },
   };
 }
 
