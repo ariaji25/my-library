@@ -242,6 +242,13 @@ export async function getCollections() {
   });
 }
 
+export async function getCollectionSummaries() {
+  return prisma.collection.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+}
+
 export async function getCollection(id: string) {
   return prisma.collection.findUnique({
     where: { id },

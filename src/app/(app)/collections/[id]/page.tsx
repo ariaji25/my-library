@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { getCollection, getBooks } from "@/lib/queries";
 import { PLACEHOLDER_COVER } from "@/lib/constants";
 import { getTranslations } from "@/lib/i18n/server";
-import { AddBookToCollectionForm } from "@/components/add-book-to-collection-form";
+import { AddBooksToCollectionPicker } from "@/components/add-books-to-collection-picker";
 import { RemoveBookFromCollectionButton } from "@/components/remove-book-from-collection-button";
 import { DeleteCollectionButton } from "@/components/delete-collection-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,23 +46,22 @@ export default async function CollectionDetailPage({
         )}
       </div>
 
-      {available.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{m.collections.addBook}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AddBookToCollectionForm
-              collectionId={id}
-              books={available.map((b) => ({
-                id: b.id,
-                title: b.title,
-                author: b.author,
-              }))}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>{m.collections.addBook}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AddBooksToCollectionPicker
+            collectionId={id}
+            books={available.map((b) => ({
+              id: b.id,
+              title: b.title,
+              author: b.author,
+              coverImage: b.coverImage,
+            }))}
+          />
+        </CardContent>
+      </Card>
 
       {collection.books.length === 0 ? (
         <p className="text-muted-foreground">{m.collections.emptyCollection}</p>

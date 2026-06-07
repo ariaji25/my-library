@@ -2,11 +2,11 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Plus } from "lucide-react";
 import type { BookStatus } from "@/generated/prisma/client";
-import { getBooksPaginated, getDashboardStats } from "@/lib/queries";
+import { getBooksPaginated, getCollectionSummaries, getDashboardStats } from "@/lib/queries";
 import type { SortOption } from "@/lib/constants";
 import { bookCountInCollection } from "@/lib/i18n";
 import { getTranslations } from "@/lib/i18n/server";
-import { BookCard } from "@/components/book-card";
+import { LibraryBookGrid } from "@/components/library-book-grid";
 import { LibraryBookSearch } from "@/components/library-book-search";
 import { LibraryFilters } from "@/components/library-filters";
 import { LibraryPagination } from "@/components/library-pagination";
@@ -29,7 +29,10 @@ export default async function LibraryPage({
 }) {
   const { messages: m } = await getTranslations();
   const params = await searchParams;
-  const { genres, authors } = await getDashboardStats();
+  const [{ genres, authors }, collections] = await Promise.all([
+    getDashboardStats(),
+    getCollectionSummaries(),
+  ]);
 
   const page = params.page ? Math.max(1, Number(params.page) || 1) : 1;
   const { books, total, totalPages } = await getBooksPaginated({
@@ -79,16 +82,11 @@ export default async function LibraryPage({
           </Button>
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-2 gap-3 min-[480px]:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-            {books.map((book, index) => (
-              <BookCard key={book.id} book={book} priority={index < 6} />
-            ))}
-          </div>
+        <LibraryBookGrid books={books} collections={collections}>
           <Suspense fallback={null}>
             <LibraryPagination page={page} totalPages={totalPages} total={total} />
           </Suspense>
-        </>
+        </LibraryBookGrid>
       )}
     </div>
   );

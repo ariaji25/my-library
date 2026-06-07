@@ -32,7 +32,9 @@ export function CreateCollectionForm() {
         <Label htmlFor="description">{m.common.description}</Label>
         <Textarea id="description" name="description" rows={2} />
       </div>
-      <SubmitButton>{m.collections.create}</SubmitButton>
+      <SubmitButton pendingLabel={m.common.saving}>
+        {m.collections.create}
+      </SubmitButton>
     </ActionForm>
   );
 }

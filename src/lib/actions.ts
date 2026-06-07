@@ -343,6 +343,17 @@ export async function deleteWishlistItem(
   }
 }
 
+function parseBookIds(formData: FormData): string[] {
+  return [
+    ...new Set(
+      formData
+        .getAll("bookIds")
+        .map((id) => String(id).trim())
+        .filter(Boolean)
+    ),
+  ];
+}
+
 export async function createCollection(
   _prev: ActionResult | null,
   formData: FormData
@@ -360,6 +371,76 @@ export async function createCollection(
 
     revalidatePath("/collections");
     return { ok: true, redirectTo: `/collections/${collection.id}` };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
+}
+
+export async function createCollectionWithBooks(
+  _prev: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    const name = String(formData.get("name") ?? "").trim();
+    const description = String(formData.get("description") ?? "").trim() || null;
+    const bookIds = parseBookIds(formData);
+
+    if (!name) return { ok: false, error: m.errors.nameRequired };
+    if (bookIds.length === 0) {
+      return { ok: false, error: m.errors.selectBooksRequired };
+    }
+
+    const collection = await prisma.collection.create({
+      data: {
+        name,
+        description,
+        books: {
+          create: bookIds.map((bookId) => ({ bookId })),
+        },
+      },
+    });
+
+    revalidatePath("/collections");
+    revalidatePath(`/collections/${collection.id}`);
+    revalidatePath("/library");
+    return {
+      ok: true,
+      redirectTo: `/collections/${collection.id}`,
+      addedCount: bookIds.length,
+    };
+  } catch (err) {
+    return fail(err, m.errors.somethingWrong);
+  }
+}
+
+export async function addBooksToCollection(
+  _prev: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
+  const m = await actionMessages();
+
+  try {
+    const collectionId = String(formData.get("collectionId") ?? "").trim();
+    const bookIds = parseBookIds(formData);
+
+    if (!collectionId) {
+      return { ok: false, error: m.errors.selectCollectionRequired };
+    }
+    if (bookIds.length === 0) {
+      return { ok: false, error: m.errors.selectBooksRequired };
+    }
+
+    await prisma.collectionBook.createMany({
+      data: bookIds.map((bookId) => ({ collectionId, bookId })),
+      skipDuplicates: true,
+    });
+
+    revalidatePath(`/collections/${collectionId}`);
+    revalidatePath("/collections");
+    revalidatePath("/library");
+    return { ok: true, addedCount: bookIds.length };
   } catch (err) {
     return fail(err, m.errors.somethingWrong);
   }
@@ -389,16 +470,21 @@ export async function addBookToCollectionForm(
   const m = await actionMessages();
 
   try {
-    const bookId = String(formData.get("bookId") ?? "");
-    if (!bookId) return { ok: false, error: m.errors.selectBookRequired };
+    const bookIds = parseBookIds(formData);
 
-    await prisma.collectionBook.upsert({
-      where: { collectionId_bookId: { collectionId, bookId } },
-      create: { collectionId, bookId },
-      update: {},
+    if (bookIds.length === 0) {
+      return { ok: false, error: m.errors.selectBooksRequired };
+    }
+
+    await prisma.collectionBook.createMany({
+      data: bookIds.map((bookId) => ({ collectionId, bookId })),
+      skipDuplicates: true,
     });
+
     revalidatePath(`/collections/${collectionId}`);
-    return { ok: true };
+    revalidatePath("/collections");
+    revalidatePath("/library");
+    return { ok: true, addedCount: bookIds.length };
   } catch (err) {
     return fail(err, m.errors.somethingWrong);
   }

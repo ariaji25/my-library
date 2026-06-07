@@ -6,13 +6,14 @@ import type { ActionResult } from "@/lib/action-result";
 import { useToast } from "@/components/toast-provider";
 
 type Options = {
-  successMessage: string;
+  successMessage?: string;
+  getSuccessMessage?: (result: Extract<ActionResult, { ok: true }>) => string;
   onSuccess?: (result: Extract<ActionResult, { ok: true }>) => void;
 };
 
 export function useActionToast(
   state: ActionResult | null,
-  { successMessage, onSuccess }: Options
+  { successMessage, getSuccessMessage, onSuccess }: Options
 ) {
   const toast = useToast();
   const router = useRouter();
@@ -21,7 +22,9 @@ export function useActionToast(
     if (!state) return;
 
     if (state.ok) {
-      toast.success(successMessage);
+      const message =
+        getSuccessMessage?.(state) ?? successMessage ?? "";
+      if (message) toast.success(message);
       onSuccess?.(state);
       if (state.redirectTo) {
         router.push(state.redirectTo);
@@ -32,5 +35,5 @@ export function useActionToast(
     }
 
     toast.error(state.error);
-  }, [state, successMessage, toast, router, onSuccess]);
+  }, [state, successMessage, getSuccessMessage, toast, router, onSuccess]);
 }
