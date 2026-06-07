@@ -85,3 +85,13 @@ export async function searchExternalBooks(
 
   return hits;
 }
+
+export async function lookupBookByIsbn(
+  isbn: string
+): Promise<BookSearchHit | null> {
+  const clean = isbn.replace(/[^0-9Xx]/g, "");
+  if (clean.length < 10) return null;
+
+  const hits = await searchExternalBooks(`isbn:${clean}`, 1);
+  return hits[0] ?? null;
+}

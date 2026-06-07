@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { isAllowedCoverFile } from "@/lib/cover-upload-constants";
 import { isUploadedCoverPath } from "@/lib/cover-path";
 import { PLACEHOLDER_COVER } from "@/lib/constants";
+import { CoverFilePicker } from "@/components/cover-file-picker";
 import { useLocale } from "@/components/locale-provider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,12 +13,14 @@ type Props = {
   currentCover?: string | null;
   coverImageId?: string;
   coverFileId?: string;
+  onCoverFile?: (file: File) => void;
 };
 
 export function CoverImageFields({
   currentCover,
   coverImageId = "coverImage",
   coverFileId = "coverFile",
+  onCoverFile,
 }: Props) {
   const { messages: m } = useLocale();
   const preview = currentCover || PLACEHOLDER_COVER;
@@ -40,17 +44,14 @@ export function CoverImageFields({
 
         <div className="min-w-0 flex-1 space-y-4">
           <div className="space-y-2">
-            <Label
-              htmlFor={coverFileId}
-              className="text-sm font-normal text-muted-foreground"
-            >
+            <Label className="text-sm font-normal text-muted-foreground">
               {m.bookForm.uploadFile}
             </Label>
-            <Input
-              id={coverFileId}
-              name="coverFile"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
+            <CoverFilePicker
+              name={coverFileId}
+              onFile={(file) => {
+                if (isAllowedCoverFile(file)) onCoverFile?.(file);
+              }}
             />
             <p className="text-xs text-muted-foreground">{m.bookForm.uploadHint}</p>
           </div>

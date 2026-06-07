@@ -142,6 +142,17 @@ export const id: Messages = {
   bookForm: {
     lookup: "Cari buku",
     searchAutofill: "Cari judul atau penulis untuk mengisi otomatis…",
+    coverScanLabel: "Pindai foto sampul",
+    coverScanCta: "Unggah sampul untuk mengisi otomatis",
+    coverScanning: "Membaca sampul…",
+    coverScanHint:
+      "AI membaca sampul dan mencocokkan Open Library jika memungkinkan. Fotomu dipakai sebagai sampul.",
+    coverScanAiHint:
+      "Pindai sampul membutuhkan OPENAI_API_KEY (sama seperti AI Pustakawan).",
+    coverScanFailed:
+      "Tidak bisa membaca sampul ini. Coba foto lebih jelas atau pakai pencarian.",
+    coverScanTimeout:
+      "Pindai sampul terlalu lama. Fotomu sudah tersimpan — isi detailnya manual ya.",
     fictionPlaceholder: "Fiksi",
     saveBook: "Simpan buku",
     addBook: "Tambah buku",
@@ -149,6 +160,10 @@ export const id: Messages = {
     coverImage: "Sampul buku",
     coverPreview: "Pratinjau sampul",
     uploadFile: "Unggah file",
+    takePhoto: "Ambil foto",
+    chooseImage: "Pilih gambar",
+    cameraPermissionHint:
+      "Ambil foto bisa minta izin kamera di browser. Pilih gambar cuma buka galeri foto.",
     uploadHint: "JPEG, PNG, WebP, atau GIF · maks. 5 MB",
     orImageUrl: "Atau URL gambar",
     removeUploadedCover: "Hapus sampul yang diunggah",
@@ -285,6 +300,8 @@ export const id: Messages = {
     aiRequestFailed: "Permintaan AI gagal",
     aiParseFailed: "Tidak dapat memproses respons AI",
     aiEmpty: "Respons AI kosong",
+    coverScanUnreadable:
+      "Tidak bisa membaca judul dan penulis dari sampul ini. Coba foto lebih jelas.",
   },
   export: {
     pagesOf: "{read} / {total} halaman",

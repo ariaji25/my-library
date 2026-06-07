@@ -2,16 +2,14 @@ import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { isUploadedCoverPath } from "@/lib/cover-path";
+import {
+  COVER_MAX_BYTES,
+  coverMimeType,
+  isAllowedCoverFile,
+} from "@/lib/cover-upload-constants";
 import { getLocale, getMessages } from "@/lib/i18n/server";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "covers");
-const MAX_BYTES = 5 * 1024 * 1024;
-const ALLOWED_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-]);
 
 export { isUploadedCoverPath } from "@/lib/cover-path";
 
@@ -35,15 +33,16 @@ export async function saveCoverUpload(file: File): Promise<string> {
   if (file.size === 0) {
     throw new Error(m.errors.coverEmpty);
   }
-  if (file.size > MAX_BYTES) {
+  if (file.size > COVER_MAX_BYTES) {
     throw new Error(m.errors.coverSize);
   }
-  if (!ALLOWED_TYPES.has(file.type)) {
+  if (!isAllowedCoverFile(file)) {
     throw new Error(m.errors.coverType);
   }
 
+  const mime = coverMimeType(file);
   await mkdir(UPLOAD_DIR, { recursive: true });
-  const filename = `${randomUUID()}.${extensionForMime(file.type)}`;
+  const filename = `${randomUUID()}.${extensionForMime(mime)}`;
   const bytes = Buffer.from(await file.arrayBuffer());
   await writeFile(path.join(UPLOAD_DIR, filename), bytes);
   return `/uploads/covers/${filename}`;

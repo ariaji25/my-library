@@ -140,6 +140,15 @@ export const en = {
   bookForm: {
     lookup: "Look up a book",
     searchAutofill: "Search title or author to autofill…",
+    coverScanLabel: "Scan a cover photo",
+    coverScanCta: "Upload a cover to autofill",
+    coverScanning: "Reading cover…",
+    coverScanHint:
+      "AI reads the cover and matches Open Library when possible. Your photo is kept as the cover.",
+    coverScanAiHint:
+      "Cover scan needs OPENAI_API_KEY (same as AI Librarian).",
+    coverScanFailed: "Could not read this cover. Try a clearer photo or use search.",
+    coverScanTimeout: "Cover scan took too long. Your photo is saved — fill in the details manually.",
     fictionPlaceholder: "Fiction",
     saveBook: "Save book",
     addBook: "Add a book",
@@ -147,6 +156,10 @@ export const en = {
     coverImage: "Cover image",
     coverPreview: "Cover preview",
     uploadFile: "Upload file",
+    takePhoto: "Take photo",
+    chooseImage: "Choose image",
+    cameraPermissionHint:
+      "Take photo may ask for camera access in your browser. Choose image only opens your photo library.",
     uploadHint: "JPEG, PNG, WebP, or GIF · max 5 MB",
     orImageUrl: "Or image URL",
     removeUploadedCover: "Remove uploaded cover",
@@ -278,6 +291,8 @@ export const en = {
     aiRequestFailed: "AI request failed",
     aiParseFailed: "Could not parse AI response",
     aiEmpty: "Empty response from AI",
+    coverScanUnreadable:
+      "Could not read title and author from this cover. Try a clearer photo.",
   },
   export: {
     pagesOf: "{read} / {total} pages",

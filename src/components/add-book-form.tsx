@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { BookSearchHit } from "@/lib/book-search-types";
 import { BOOK_STATUS_VALUES } from "@/lib/constants";
 import { statusLabel } from "@/lib/i18n";
+import { BookCoverScan } from "@/components/book-cover-scan";
 import { BookSearchAutocomplete } from "@/components/book-search-autocomplete";
 import { CoverImageFields } from "@/components/cover-image-fields";
 import { useLocale } from "@/components/locale-provider";
@@ -22,9 +23,10 @@ export type AddBookFormDefaults = {
 type Props = {
   action: (formData: FormData) => Promise<void>;
   defaults?: AddBookFormDefaults;
+  aiConfigured?: boolean;
 };
 
-export function AddBookForm({ action, defaults }: Props) {
+export function AddBookForm({ action, defaults, aiConfigured }: Props) {
   const { messages: m } = useLocale();
   const formRef = useRef<HTMLFormElement>(null);
   const [coverPreview, setCoverPreview] = useState(defaults?.coverImage);
@@ -32,7 +34,25 @@ export function AddBookForm({ action, defaults }: Props) {
     defaults?.coverImage ? "initial" : "empty"
   );
 
-  function applySearchHit(book: BookSearchHit) {
+  function applyCoverFile(file: File) {
+    const form = formRef.current;
+    if (!form) return;
+
+    const coverImage = form.elements.namedItem("coverImage");
+    if (coverImage instanceof HTMLInputElement) {
+      coverImage.value = "";
+    }
+    setCoverPreview(URL.createObjectURL(file));
+
+    const coverFileInput = form.elements.namedItem("coverFile");
+    if (coverFileInput instanceof HTMLInputElement) {
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      coverFileInput.files = transfer.files;
+    }
+  }
+
+  function applyBookHit(book: BookSearchHit, coverFile?: File) {
     const form = formRef.current;
     if (!form) return;
 
@@ -47,7 +67,10 @@ export function AddBookForm({ action, defaults }: Props) {
     set("author", book.author);
     set("genre", book.genre);
     if (book.year) set("publishedYear", String(book.year));
-    if (book.coverUrl) {
+
+    if (coverFile) {
+      applyCoverFile(coverFile);
+    } else if (book.coverUrl) {
       set("coverImage", book.coverUrl);
       setCoverPreview(book.coverUrl);
       setCoverKey(book.id);
@@ -56,10 +79,16 @@ export function AddBookForm({ action, defaults }: Props) {
 
   return (
     <div className="space-y-6">
+      <BookCoverScan
+        aiConfigured={aiConfigured}
+        onCoverFile={applyCoverFile}
+        onScan={(book, file) => applyBookHit(book, file)}
+      />
+
       <BookSearchAutocomplete
         label={m.bookForm.lookup}
         placeholder={m.bookForm.searchAutofill}
-        onSelect={applySearchHit}
+        onSelect={(book) => applyBookHit(book)}
       />
 
       <form
@@ -107,7 +136,11 @@ export function AddBookForm({ action, defaults }: Props) {
             defaultValue={defaults?.publishedYear ?? ""}
           />
         </div>
-        <CoverImageFields key={coverKey} currentCover={coverPreview} />
+        <CoverImageFields
+          key={coverKey}
+          currentCover={coverPreview}
+          onCoverFile={(file) => setCoverPreview(URL.createObjectURL(file))}
+        />
         <div className="space-y-2">
           <Label htmlFor="status">{m.common.status}</Label>
           <select
