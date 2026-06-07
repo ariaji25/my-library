@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getNavItems, isNavActive } from "@/lib/nav";
 import { cn } from "@/lib/utils";
+import { NavLink } from "@/components/nav-link";
 import { useLocale } from "@/components/locale-provider";
 
 export function MobileNav() {
@@ -23,7 +23,7 @@ export function MobileNav() {
         {navItems.map(({ href, shortLabel, icon: Icon }) => {
           const active = isNavActive(pathname, href);
           return (
-            <Link
+            <NavLink
               key={href}
               href={href}
               className={cn(
@@ -33,7 +33,7 @@ export function MobileNav() {
             >
               <span
                 className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-full",
+                  "relative flex h-7 w-7 items-center justify-center rounded-full",
                   active && "bg-primary/15"
                 )}
               >
@@ -45,7 +45,7 @@ export function MobileNav() {
               <span className="max-w-full truncate text-[0.625rem] font-semibold leading-none">
                 {shortLabel}
               </span>
-            </Link>
+            </NavLink>
           );
         })}
       </div>

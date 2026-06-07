@@ -63,7 +63,11 @@ export default async function LibraryPage({
 
       <LibraryBookSearch />
 
-      <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-muted" />}>
+      <Suspense
+        fallback={
+          <div className="h-24 animate-pulse rounded-lg bg-muted" aria-hidden />
+        }
+      >
         <LibraryFilters genres={genres} authors={authors} />
       </Suspense>
 

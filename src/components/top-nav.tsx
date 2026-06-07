@@ -7,6 +7,7 @@ import { getNavItems, isNavActive } from "@/lib/nav";
 import { SHELL_MAX, SHELL_PX } from "@/lib/layout-shell";
 import { cn } from "@/lib/utils";
 import { HeaderActions } from "@/components/header-actions";
+import { NavLink } from "@/components/nav-link";
 import { useLocale } from "@/components/locale-provider";
 
 export function TopNav({ showSignOut = false }: { showSignOut?: boolean }) {
@@ -42,7 +43,7 @@ export function TopNav({ showSignOut = false }: { showSignOut?: boolean }) {
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = isNavActive(pathname, href);
             return (
-              <Link
+              <NavLink
                 key={href}
                 href={href}
                 className={cn(
@@ -57,7 +58,7 @@ export function TopNav({ showSignOut = false }: { showSignOut?: boolean }) {
                   strokeWidth={active ? 2.25 : 2}
                 />
                 <span>{label}</span>
-              </Link>
+              </NavLink>
             );
           })}
         </nav>
