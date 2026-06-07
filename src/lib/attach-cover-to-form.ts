@@ -1,5 +1,6 @@
 "use client";
 
+import { compressCoverImage } from "@/lib/compress-cover-image";
 import type { CoverStorageMode } from "@/lib/cover-storage";
 import {
   COVER_MAX_BYTES,
@@ -54,7 +55,9 @@ export async function attachCoverToForm(
   }
 
   const maxBytes = mode === "inline" ? INLINE_COVER_MAX_BYTES : COVER_MAX_BYTES;
-  if (file.size > maxBytes) {
+  const compressed = await compressCoverImage(file, maxBytes);
+
+  if (compressed.size > maxBytes) {
     return {
       preview: "",
       error: mode === "inline" ? m.coverInlineTooLarge : m.coverSize,
@@ -67,7 +70,7 @@ export async function attachCoverToForm(
   }
 
   if (mode === "inline") {
-    const dataUrl = await fileToDataUrl(file);
+    const dataUrl = await fileToDataUrl(compressed);
     coverImage.value = dataUrl;
     clearCoverFileInput(form, coverFileId);
     return { preview: dataUrl };
@@ -77,9 +80,9 @@ export async function attachCoverToForm(
   const coverFileInput = form.elements.namedItem(coverFileId);
   if (coverFileInput instanceof HTMLInputElement) {
     const transfer = new DataTransfer();
-    transfer.items.add(file);
+    transfer.items.add(compressed);
     coverFileInput.files = transfer.files;
   }
 
-  return { preview: URL.createObjectURL(file) };
+  return { preview: URL.createObjectURL(compressed) };
 }

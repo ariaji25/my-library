@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { BookSearchHit } from "@/lib/book-search-types";
+import { compressCoverImage } from "@/lib/compress-cover-image";
 import {
   COVER_MAX_BYTES,
   isAllowedCoverFile,
@@ -38,16 +39,18 @@ export function BookCoverScan({
       setError(m.errors.coverEmpty);
       return;
     }
-    if (file.size > COVER_MAX_BYTES) {
-      setError(m.errors.coverSize);
-      return;
-    }
     if (!isAllowedCoverFile(file)) {
       setError(m.errors.coverType);
       return;
     }
 
-    onCoverFile?.(file);
+    const compressed = await compressCoverImage(file, COVER_MAX_BYTES);
+    if (compressed.size > COVER_MAX_BYTES) {
+      setError(m.errors.coverSize);
+      return;
+    }
+
+    onCoverFile?.(compressed);
 
     if (!coverScanConfigured) {
       setError(m.bookForm.coverScanAiHint);
@@ -61,7 +64,7 @@ export function BookCoverScan({
 
     try {
       const body = new FormData();
-      body.set("cover", file);
+      body.set("cover", compressed);
 
       const res = await fetch("/api/books/scan-cover", {
         method: "POST",
