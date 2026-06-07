@@ -36,13 +36,18 @@ export function AddBooksToCollectionPicker({ collectionId, books }: Props) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const onSuccess = useCallback(() => setSelected(new Set()), []);
-
-  useActionToast(state, {
-    getSuccessMessage: (result) =>
+  const getSuccessMessage = useCallback(
+    (result: Extract<ActionResult, { ok: true }>) =>
       result.addedCount
         ? interpolate(m.collections.booksAdded, { count: result.addedCount })
         : m.toast.added,
+    [m]
+  );
+
+  const onSuccess = useCallback(() => setSelected(new Set()), []);
+
+  useActionToast(state, {
+    getSuccessMessage,
     onSuccess,
   });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { ActionResult } from "@/lib/action-result";
 import { useToast } from "@/components/toast-provider";
@@ -17,15 +17,23 @@ export function useActionToast(
 ) {
   const toast = useToast();
   const router = useRouter();
+  const handledStateRef = useRef<ActionResult | null>(null);
+  const getSuccessMessageRef = useRef(getSuccessMessage);
+  const onSuccessRef = useRef(onSuccess);
+
+  getSuccessMessageRef.current = getSuccessMessage;
+  onSuccessRef.current = onSuccess;
 
   useEffect(() => {
     if (!state) return;
+    if (handledStateRef.current === state) return;
+    handledStateRef.current = state;
 
     if (state.ok) {
       const message =
-        getSuccessMessage?.(state) ?? successMessage ?? "";
+        getSuccessMessageRef.current?.(state) ?? successMessage ?? "";
       if (message) toast.success(message);
-      onSuccess?.(state);
+      onSuccessRef.current?.(state);
       if (state.redirectTo) {
         router.push(state.redirectTo);
       } else if (state.bookId) {
@@ -35,5 +43,5 @@ export function useActionToast(
     }
 
     toast.error(state.error);
-  }, [state, successMessage, getSuccessMessage, toast, router, onSuccess]);
+  }, [state, successMessage, toast, router]);
 }

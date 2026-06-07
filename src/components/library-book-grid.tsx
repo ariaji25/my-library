@@ -63,6 +63,24 @@ export function LibraryBookGrid({ books, collections, children }: Props) {
     FormData
   >(addBooksToCollection, null);
 
+  const getCreateSuccessMessage = useCallback(
+    (result: Extract<ActionResult, { ok: true }>) =>
+      result.addedCount
+        ? interpolate(m.library.collectionCreatedWithBooks, {
+            count: result.addedCount,
+          })
+        : m.toast.added,
+    [m]
+  );
+
+  const getAddSuccessMessage = useCallback(
+    (result: Extract<ActionResult, { ok: true }>) =>
+      result.addedCount
+        ? interpolate(m.collections.booksAdded, { count: result.addedCount })
+        : m.toast.added,
+    [m]
+  );
+
   const onCreateSuccess = useCallback(() => {
     clearSelectedBookIds();
     setSelected(new Set());
@@ -81,20 +99,12 @@ export function LibraryBookGrid({ books, collections, children }: Props) {
   }, []);
 
   useActionToast(createState, {
-    getSuccessMessage: (result) =>
-      result.addedCount
-        ? interpolate(m.library.collectionCreatedWithBooks, {
-            count: result.addedCount,
-          })
-        : m.toast.added,
+    getSuccessMessage: getCreateSuccessMessage,
     onSuccess: onCreateSuccess,
   });
 
   useActionToast(addState, {
-    getSuccessMessage: (result) =>
-      result.addedCount
-        ? interpolate(m.collections.booksAdded, { count: result.addedCount })
-        : m.toast.added,
+    getSuccessMessage: getAddSuccessMessage,
     onSuccess: onAddSuccess,
   });
 
