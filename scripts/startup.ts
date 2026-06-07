@@ -72,9 +72,16 @@ function migrationDatabaseUrl(): string {
   return url;
 }
 
+function shouldRunMigrationsOnStartup(): boolean {
+  if (process.env.SKIP_MIGRATE === "true") return false;
+  return process.env.RUN_MIGRATE_ON_STARTUP === "true";
+}
+
 async function migrateWithRetry() {
-  if (process.env.SKIP_MIGRATE === "true") {
-    console.log("[startup] SKIP_MIGRATE=true — skipping migrations");
+  if (!shouldRunMigrationsOnStartup()) {
+    console.log(
+      "[startup] Skipping migrations (set RUN_MIGRATE_ON_STARTUP=true to enable)"
+    );
     return;
   }
 

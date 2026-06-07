@@ -17,14 +17,14 @@ const SCAN_TIMEOUT_MS = 90_000;
 type Props = {
   onScan: (book: BookSearchHit, file: File) => void;
   onCoverFile?: (file: File) => void;
-  aiConfigured?: boolean;
+  coverScanConfigured?: boolean;
   className?: string;
 };
 
 export function BookCoverScan({
   onScan,
   onCoverFile,
-  aiConfigured = true,
+  coverScanConfigured = true,
   className,
 }: Props) {
   const { messages: m } = useLocale();
@@ -49,7 +49,7 @@ export function BookCoverScan({
 
     onCoverFile?.(file);
 
-    if (!aiConfigured) {
+    if (!coverScanConfigured) {
       setError(m.bookForm.coverScanAiHint);
       return;
     }
@@ -122,11 +122,11 @@ export function BookCoverScan({
           {m.bookForm.uploadHint}
         </p>
       </div>
-      {!aiConfigured && (
+      {!coverScanConfigured && (
         <p className="text-xs text-muted-foreground">{m.bookForm.coverScanAiHint}</p>
       )}
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {aiConfigured && !loading && !error && (
+      {coverScanConfigured && !loading && !error && (
         <p className="text-xs text-muted-foreground">{m.bookForm.coverScanHint}</p>
       )}
     </div>

@@ -32,6 +32,8 @@ npm run test:book-search        # verifies Open Library + /api/books/search
 | `DATABASE_URL` | PostgreSQL (local: `localhost:5433`) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Optional admin login; **both must be set** to enable auth |
 | `GOOGLE_BOOKS_API_KEY` | Not implemented yet; discussed as optional upgrade |
+| `COVER_SCAN_API_KEY` / `COVER_SCAN_MODEL` / `COVER_SCAN_BASE_URL` | Cover photo autofill on `/library/new` (separate from AI Librarian) |
+| `OPENAI_API_KEY` / `AI_MODEL` / `AI_BASE_URL` | AI Librarian (`/assistant`) only |
 
 Auth: no DB users — env-only admin. Session cookie signed with email+password. Public paths: `/login`, `/api/health`, `/api/books/search`.
 
@@ -40,7 +42,7 @@ Auth: no DB users — env-only admin. Session cookie signed with email+password.
 - **GHCR**: `.github/workflows/docker.yml` → `ghcr.io/<owner>/<repo>:latest` on `main`
 - **Compose prod**: `docker-compose.example.yml` + `.env.compose.example` (pull GHCR image + Postgres + `cover_uploads` volume)
 - **Vercel**: see `DEPLOYMENT.md`; use cover **URLs** only (no persistent uploads)
-- Migrations run at container start via `scripts/startup.ts`
+- Startup migrations off by default (`scripts/startup.ts`); set `RUN_MIGRATE_ON_STARTUP=true` or run `npm run db:migrate:deploy`
 
 ## Features implemented
 

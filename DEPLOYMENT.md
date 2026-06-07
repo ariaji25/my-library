@@ -46,11 +46,14 @@ On the **project** (all environments you deploy):
 | Name | Value |
 |------|--------|
 | `DATABASE_URL` | Postgres connection string (pooled URL if provider offers one) |
+| `DIRECT_DATABASE_URL` | **Supabase only:** direct URL for migrations (`db.*.supabase.co:5432`) |
 | `NODE_ENV` | `production` |
 
 **Do not set** `NODE_OPTIONS` unless you know you need it.
 
 `DATABASE_URL` must be available at **build time** too (for `prisma migrate deploy` in `vercel-build`).
+
+**Supabase:** use the **transaction pooler** (`pooler.supabase.com:6543?pgbouncer=true`) for `DATABASE_URL`. Do not use session pooler `:5432` for the app — it caps at ~15 clients and triggers `EMAXCONNSESSION`. Set `DIRECT_DATABASE_URL` to `db.[ref].supabase.co:5432` for migrations only.
 
 ### 4. Deploy
 
@@ -68,7 +71,8 @@ Or from Vercel dashboard → project → **⋯** → **Open in Terminal** → `n
 | Variable | Effect |
 |----------|--------|
 | `SEED_DATABASE=true` | Not used on Vercel build; use `db:seed` manually |
-| `SKIP_MIGRATE=true` | Change `vercel-build` to `prisma generate && next build` if migrations run elsewhere |
+| `RUN_MIGRATE_ON_STARTUP=true` | Run `prisma migrate deploy` when Docker/`npm run start` boots (default: off) |
+| `SKIP_MIGRATE=true` | Force skip startup migrations even if `RUN_MIGRATE_ON_STARTUP=true` |
 
 ---
 
@@ -103,7 +107,7 @@ echo "$GITHUB_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USER --password-stdin
 
 Then grant the token `read:packages`. To make the image public: GitHub → **Packages** → your package → **Package settings** → **Change visibility**.
 
-Migrations run at container start via `npm run start` (see `scripts/startup.ts`). Ensure `DATABASE_URL` points at a reachable Postgres instance.
+Migrations do **not** run at container start by default. Run them manually with `npm run db:migrate:deploy`, or set `RUN_MIGRATE_ON_STARTUP=true` on the service. Ensure `DATABASE_URL` points at a reachable Postgres instance.
 
 ### Docker Compose (app + Postgres)
 

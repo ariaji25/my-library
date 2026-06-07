@@ -1,9 +1,12 @@
-import { AiLibrarianError } from "@/lib/ai-librarian";
 import {
   lookupBookByIsbn,
   searchExternalBooks,
   type BookSearchHit,
 } from "@/lib/book-search";
+import {
+  CoverScanError,
+  getCoverScanConfig,
+} from "@/lib/cover-scan-ai";
 import {
   COVER_MAX_BYTES,
   coverMimeType,
@@ -61,26 +64,21 @@ async function extractFromCoverImage(
   locale: Locale
 ): Promise<VisionExtraction> {
   const m = getMessages(locale);
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) {
-    throw new AiLibrarianError(m.errors.aiNotConfiguredServer, "NOT_CONFIGURED");
+  const config = getCoverScanConfig();
+  if (!config) {
+    throw new CoverScanError(m.errors.coverScanNotConfiguredServer, "NOT_CONFIGURED");
   }
-
-  const model = process.env.AI_MODEL?.trim() || "gpt-4o-mini";
-  const baseUrl = (
-    process.env.AI_BASE_URL?.trim() || "https://api.openai.com/v1"
-  ).replace(/\/$/, "");
 
   const dataUrl = `data:${mimeType};base64,${bytes.toString("base64")}`;
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  const response = await fetch(`${config.baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${config.apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
+      model: config.model,
       messages: [
         {
           role: "user",
@@ -102,10 +100,10 @@ async function extractFromCoverImage(
   const raw = await response.text().catch(() => "");
 
   if (!response.ok) {
-    throw new AiLibrarianError(
+    throw new CoverScanError(
       raw
-        ? `${m.errors.aiRequestFailed}: ${raw.slice(0, 200)}`
-        : m.errors.aiRequestFailed,
+        ? `${m.errors.coverScanRequestFailed}: ${raw.slice(0, 200)}`
+        : m.errors.coverScanRequestFailed,
       "API_ERROR"
     );
   }
@@ -121,7 +119,7 @@ async function extractFromCoverImage(
     }
     parsed = JSON.parse(content) as VisionExtraction;
   } catch {
-    throw new AiLibrarianError(m.errors.aiParseFailed, "INVALID_RESPONSE");
+    throw new CoverScanError(m.errors.coverScanParseFailed, "INVALID_RESPONSE");
   }
 
   return parsed;
@@ -210,5 +208,5 @@ export async function scanBookCover(
   if (visionHit) return visionHit;
 
   const m = getMessages(locale);
-  throw new AiLibrarianError(m.errors.coverScanUnreadable, "INVALID_RESPONSE");
+  throw new CoverScanError(m.errors.coverScanUnreadable, "INVALID_RESPONSE");
 }

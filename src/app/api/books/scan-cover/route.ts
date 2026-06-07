@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { AiLibrarianError } from "@/lib/ai-librarian";
 import { scanBookCover } from "@/lib/book-cover-scan";
+import { CoverScanError } from "@/lib/cover-scan-ai";
 import { getLocale, getMessages } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       { headers: { "Cache-Control": "no-store" } }
     );
   } catch (err) {
-    if (err instanceof AiLibrarianError) {
+    if (err instanceof CoverScanError) {
       const status =
         err.code === "NOT_CONFIGURED"
           ? 503

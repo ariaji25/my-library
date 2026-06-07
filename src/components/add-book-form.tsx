@@ -23,10 +23,10 @@ export type AddBookFormDefaults = {
 type Props = {
   action: (formData: FormData) => Promise<void>;
   defaults?: AddBookFormDefaults;
-  aiConfigured?: boolean;
+  coverScanConfigured?: boolean;
 };
 
-export function AddBookForm({ action, defaults, aiConfigured }: Props) {
+export function AddBookForm({ action, defaults, coverScanConfigured }: Props) {
   const { messages: m } = useLocale();
   const formRef = useRef<HTMLFormElement>(null);
   const [coverPreview, setCoverPreview] = useState(defaults?.coverImage);
@@ -80,7 +80,7 @@ export function AddBookForm({ action, defaults, aiConfigured }: Props) {
   return (
     <div className="space-y-6">
       <BookCoverScan
-        aiConfigured={aiConfigured}
+        coverScanConfigured={coverScanConfigured}
         onCoverFile={applyCoverFile}
         onScan={(book, file) => applyBookHit(book, file)}
       />

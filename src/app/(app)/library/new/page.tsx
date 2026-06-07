@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { isAiConfigured } from "@/lib/ai-librarian";
+import { isCoverScanConfigured } from "@/lib/cover-scan-ai";
 import { createBook } from "@/lib/actions";
 import { getTranslations } from "@/lib/i18n/server";
 import { AddBookForm } from "@/components/add-book-form";
@@ -20,7 +20,7 @@ export default async function NewBookPage({
   searchParams: SearchParams;
 }) {
   const { messages: m } = await getTranslations();
-  const aiConfigured = isAiConfigured();
+  const coverScanConfigured = isCoverScanConfigured();
   const params = await searchParams;
   const year = params.year ? Number(params.year) : undefined;
 
@@ -53,7 +53,7 @@ export default async function NewBookPage({
           <AddBookForm
             action={createBook}
             defaults={defaults}
-            aiConfigured={aiConfigured}
+            coverScanConfigured={coverScanConfigured}
           />
         </CardContent>
       </Card>

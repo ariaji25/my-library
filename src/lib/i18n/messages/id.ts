@@ -148,7 +148,7 @@ export const id: Messages = {
     coverScanHint:
       "AI membaca sampul dan mencocokkan Open Library jika memungkinkan. Fotomu dipakai sebagai sampul.",
     coverScanAiHint:
-      "Pindai sampul membutuhkan OPENAI_API_KEY (sama seperti AI Pustakawan).",
+      "Pindai sampul membutuhkan COVER_SCAN_API_KEY (dan opsional COVER_SCAN_MODEL / COVER_SCAN_BASE_URL).",
     coverScanFailed:
       "Tidak bisa membaca sampul ini. Coba foto lebih jelas atau pakai pencarian.",
     coverScanTimeout:
@@ -302,6 +302,10 @@ export const id: Messages = {
     aiEmpty: "Respons AI kosong",
     coverScanUnreadable:
       "Tidak bisa membaca judul dan penulis dari sampul ini. Coba foto lebih jelas.",
+    coverScanNotConfiguredServer:
+      "Pindai sampul belum dikonfigurasi. Set COVER_SCAN_API_KEY di server.",
+    coverScanRequestFailed: "Permintaan pindai sampul gagal",
+    coverScanParseFailed: "Tidak dapat memproses respons pindai sampul",
   },
   export: {
     pagesOf: "{read} / {total} halaman",

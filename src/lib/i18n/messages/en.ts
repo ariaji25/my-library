@@ -146,7 +146,7 @@ export const en = {
     coverScanHint:
       "AI reads the cover and matches Open Library when possible. Your photo is kept as the cover.",
     coverScanAiHint:
-      "Cover scan needs OPENAI_API_KEY (same as AI Librarian).",
+      "Cover scan needs COVER_SCAN_API_KEY (and optional COVER_SCAN_MODEL / COVER_SCAN_BASE_URL).",
     coverScanFailed: "Could not read this cover. Try a clearer photo or use search.",
     coverScanTimeout: "Cover scan took too long. Your photo is saved — fill in the details manually.",
     fictionPlaceholder: "Fiction",
@@ -293,6 +293,10 @@ export const en = {
     aiEmpty: "Empty response from AI",
     coverScanUnreadable:
       "Could not read title and author from this cover. Try a clearer photo.",
+    coverScanNotConfiguredServer:
+      "Cover scan is not configured. Set COVER_SCAN_API_KEY on the server.",
+    coverScanRequestFailed: "Cover scan request failed",
+    coverScanParseFailed: "Could not parse cover scan response",
   },
   export: {
     pagesOf: "{read} / {total} pages",
