@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { isCoverScanConfigured } from "@/lib/cover-scan-ai";
+import { getCoverStorageMode } from "@/lib/cover-storage";
 import { createBook } from "@/lib/actions";
 import { getTranslations } from "@/lib/i18n/server";
 import { AddBookForm } from "@/components/add-book-form";
@@ -21,6 +22,7 @@ export default async function NewBookPage({
 }) {
   const { messages: m } = await getTranslations();
   const coverScanConfigured = isCoverScanConfigured();
+  const coverStorage = getCoverStorageMode();
   const params = await searchParams;
   const year = params.year ? Number(params.year) : undefined;
 
@@ -54,6 +56,7 @@ export default async function NewBookPage({
             action={createBook}
             defaults={defaults}
             coverScanConfigured={coverScanConfigured}
+            coverStorage={coverStorage}
           />
         </CardContent>
       </Card>

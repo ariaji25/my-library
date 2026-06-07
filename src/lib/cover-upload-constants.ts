@@ -1,5 +1,8 @@
 export const COVER_MAX_BYTES = 5 * 1024 * 1024;
 
+/** Vercel / inline storage — keeps server-action body under 5 MB */
+export const INLINE_COVER_MAX_BYTES = 2 * 1024 * 1024;
+
 export const COVER_ALLOWED_TYPES = new Set([
   "image/jpeg",
   "image/png",

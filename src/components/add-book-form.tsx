@@ -2,7 +2,9 @@
 
 import { useRef, useState } from "react";
 import type { BookSearchHit } from "@/lib/book-search-types";
+import { attachCoverToForm } from "@/lib/attach-cover-to-form";
 import { BOOK_STATUS_VALUES } from "@/lib/constants";
+import type { CoverStorageMode } from "@/lib/cover-storage";
 import { statusLabel } from "@/lib/i18n";
 import { BookCoverScan } from "@/components/book-cover-scan";
 import { BookSearchAutocomplete } from "@/components/book-search-autocomplete";
@@ -24,32 +26,43 @@ type Props = {
   action: (formData: FormData) => Promise<void>;
   defaults?: AddBookFormDefaults;
   coverScanConfigured?: boolean;
+  coverStorage?: CoverStorageMode;
 };
 
-export function AddBookForm({ action, defaults, coverScanConfigured }: Props) {
+export function AddBookForm({
+  action,
+  defaults,
+  coverScanConfigured,
+  coverStorage = "disk",
+}: Props) {
   const { messages: m } = useLocale();
   const formRef = useRef<HTMLFormElement>(null);
   const [coverPreview, setCoverPreview] = useState(defaults?.coverImage);
   const [coverKey, setCoverKey] = useState(
     defaults?.coverImage ? "initial" : "empty"
   );
+  const [coverError, setCoverError] = useState<string | null>(null);
 
-  function applyCoverFile(file: File) {
+  async function applyCoverFile(file: File) {
     const form = formRef.current;
     if (!form) return;
 
-    const coverImage = form.elements.namedItem("coverImage");
-    if (coverImage instanceof HTMLInputElement) {
-      coverImage.value = "";
-    }
-    setCoverPreview(URL.createObjectURL(file));
+    setCoverError(null);
+    const result = await attachCoverToForm(form, file, coverStorage, {
+      messages: {
+        coverEmpty: m.errors.coverEmpty,
+        coverSize: m.errors.coverSize,
+        coverType: m.errors.coverType,
+        coverInlineTooLarge: m.errors.coverInlineTooLarge,
+      },
+    });
 
-    const coverFileInput = form.elements.namedItem("coverFile");
-    if (coverFileInput instanceof HTMLInputElement) {
-      const transfer = new DataTransfer();
-      transfer.items.add(file);
-      coverFileInput.files = transfer.files;
+    if (result.error) {
+      setCoverError(result.error);
+      return;
     }
+
+    setCoverPreview(result.preview);
   }
 
   function applyBookHit(book: BookSearchHit, coverFile?: File) {
@@ -69,7 +82,7 @@ export function AddBookForm({ action, defaults, coverScanConfigured }: Props) {
     if (book.year) set("publishedYear", String(book.year));
 
     if (coverFile) {
-      applyCoverFile(coverFile);
+      void applyCoverFile(coverFile);
     } else if (book.coverUrl) {
       set("coverImage", book.coverUrl);
       setCoverPreview(book.coverUrl);
@@ -81,7 +94,7 @@ export function AddBookForm({ action, defaults, coverScanConfigured }: Props) {
     <div className="space-y-6">
       <BookCoverScan
         coverScanConfigured={coverScanConfigured}
-        onCoverFile={applyCoverFile}
+        onCoverFile={(file) => void applyCoverFile(file)}
         onScan={(book, file) => applyBookHit(book, file)}
       />
 
@@ -90,6 +103,10 @@ export function AddBookForm({ action, defaults, coverScanConfigured }: Props) {
         placeholder={m.bookForm.searchAutofill}
         onSelect={(book) => applyBookHit(book)}
       />
+
+      {coverError && (
+        <p className="text-sm text-destructive">{coverError}</p>
+      )}
 
       <form
         ref={formRef}
@@ -139,7 +156,7 @@ export function AddBookForm({ action, defaults, coverScanConfigured }: Props) {
         <CoverImageFields
           key={coverKey}
           currentCover={coverPreview}
-          onCoverFile={(file) => setCoverPreview(URL.createObjectURL(file))}
+          coverStorage={coverStorage}
         />
         <div className="space-y-2">
           <Label htmlFor="status">{m.common.status}</Label>

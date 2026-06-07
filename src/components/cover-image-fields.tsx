@@ -1,8 +1,11 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Image from "next/image";
-import { isAllowedCoverFile } from "@/lib/cover-upload-constants";
+import { attachCoverToForm } from "@/lib/attach-cover-to-form";
+import { isDataUrlCover } from "@/lib/cover-inline";
 import { isUploadedCoverPath } from "@/lib/cover-path";
+import type { CoverStorageMode } from "@/lib/cover-storage";
 import { PLACEHOLDER_COVER } from "@/lib/constants";
 import { CoverFilePicker } from "@/components/cover-file-picker";
 import { useLocale } from "@/components/locale-provider";
@@ -13,27 +16,66 @@ type Props = {
   currentCover?: string | null;
   coverImageId?: string;
   coverFileId?: string;
-  onCoverFile?: (file: File) => void;
+  coverStorage?: CoverStorageMode;
 };
 
 export function CoverImageFields({
   currentCover,
   coverImageId = "coverImage",
   coverFileId = "coverFile",
-  onCoverFile,
+  coverStorage = "disk",
 }: Props) {
   const { messages: m } = useLocale();
-  const preview = currentCover || PLACEHOLDER_COVER;
-  const showRemove = isUploadedCoverPath(currentCover);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const displayCover = preview ?? currentCover ?? PLACEHOLDER_COVER;
+  const showRemove = isUploadedCoverPath(currentCover) && !preview;
+
+  async function handleCoverFile(file: File) {
+    setError(null);
+    const form = rootRef.current?.closest("form");
+    if (!(form instanceof HTMLFormElement)) return;
+
+    try {
+      const result = await attachCoverToForm(form, file, coverStorage, {
+        coverFileId,
+        coverImageId,
+        messages: {
+          coverEmpty: m.errors.coverEmpty,
+          coverSize: m.errors.coverSize,
+          coverType: m.errors.coverType,
+          coverInlineTooLarge: m.errors.coverInlineTooLarge,
+        },
+      });
+
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      setPreview(result.preview);
+    } catch {
+      setError(m.errors.somethingWrong);
+    }
+  }
+
+  const urlDefault =
+    currentCover &&
+    !isUploadedCoverPath(currentCover) &&
+    !isDataUrlCover(currentCover)
+      ? currentCover
+      : "";
 
   return (
-    <div className="space-y-4 md:col-span-2">
+    <div ref={rootRef} className="space-y-4 md:col-span-2">
       <Label>{m.bookForm.coverImage}</Label>
 
       <div className="flex flex-wrap items-start gap-4">
         <div className="relative aspect-[2/3] w-24 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-muted/40 sm:w-28">
           <Image
-            src={preview}
+            src={displayCover}
             alt={m.bookForm.coverPreview}
             fill
             className="object-cover"
@@ -48,12 +90,15 @@ export function CoverImageFields({
               {m.bookForm.uploadFile}
             </Label>
             <CoverFilePicker
-              name={coverFileId}
-              onFile={(file) => {
-                if (isAllowedCoverFile(file)) onCoverFile?.(file);
-              }}
+              name={coverStorage === "disk" ? coverFileId : undefined}
+              onFile={(file) => void handleCoverFile(file)}
             />
-            <p className="text-xs text-muted-foreground">{m.bookForm.uploadHint}</p>
+            <p className="text-xs text-muted-foreground">
+              {coverStorage === "inline"
+                ? m.bookForm.coverInlineHint
+                : m.bookForm.uploadHint}
+            </p>
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
 
           <div className="space-y-2">
@@ -67,11 +112,7 @@ export function CoverImageFields({
               id={coverImageId}
               name="coverImage"
               type="url"
-              defaultValue={
-                currentCover && !isUploadedCoverPath(currentCover)
-                  ? currentCover
-                  : ""
-              }
+              defaultValue={urlDefault}
               placeholder="https://…"
             />
           </div>

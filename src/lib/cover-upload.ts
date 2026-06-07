@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { validateInlineCoverDataUrl } from "@/lib/cover-inline";
 import { isUploadedCoverPath } from "@/lib/cover-path";
+import { supportsDiskCoverStorage } from "@/lib/cover-storage";
 import {
   COVER_MAX_BYTES,
   coverMimeType,
@@ -30,6 +32,11 @@ function extensionForMime(type: string): string {
 
 export async function saveCoverUpload(file: File): Promise<string> {
   const m = getMessages(await getLocale());
+
+  if (!supportsDiskCoverStorage()) {
+    throw new Error(m.errors.coverUploadEphemeral);
+  }
+
   if (file.size === 0) {
     throw new Error(m.errors.coverEmpty);
   }
@@ -63,6 +70,8 @@ export async function resolveCoverFromFormData(
   formData: FormData,
   existingCover?: string | null
 ): Promise<string | null> {
+  const m = getMessages(await getLocale());
+
   const file = formData.get("coverFile");
   if (file instanceof File && file.size > 0) {
     const saved = await saveCoverUpload(file);
@@ -79,6 +88,18 @@ export async function resolveCoverFromFormData(
 
   const url = String(formData.get("coverImage") ?? "").trim();
   if (url) {
+    if (url.startsWith("data:")) {
+      validateInlineCoverDataUrl(
+        url,
+        m.errors.coverInlineTooLarge,
+        m.errors.coverType
+      );
+      if (existingCover && isUploadedCoverPath(existingCover)) {
+        await deleteUploadedCover(existingCover);
+      }
+      return url;
+    }
+
     if (
       existingCover &&
       isUploadedCoverPath(existingCover) &&

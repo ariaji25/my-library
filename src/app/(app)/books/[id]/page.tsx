@@ -14,6 +14,7 @@ import {
 } from "@/lib/actions";
 import { BOOK_STATUS_VALUES, PLACEHOLDER_COVER } from "@/lib/constants";
 import { interpolate, statusLabel } from "@/lib/i18n";
+import { getCoverStorageMode } from "@/lib/cover-storage";
 import { getTranslations } from "@/lib/i18n/server";
 import { formatAppDate } from "@/lib/format";
 import { StarRating } from "@/components/star-rating";
@@ -32,6 +33,7 @@ export default async function BookDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { locale, messages: m } = await getTranslations();
+  const coverStorage = getCoverStorageMode();
   const { id } = await params;
   const book = await getBook(id);
   if (!book) notFound();
@@ -155,7 +157,10 @@ export default async function BookDetailPage({
                 defaultValue={book.publishedYear ?? ""}
               />
             </div>
-            <CoverImageFields currentCover={book.coverImage} />
+            <CoverImageFields
+              currentCover={book.coverImage}
+              coverStorage={coverStorage}
+            />
             <div className="space-y-2">
               <Label htmlFor="status">{m.common.status}</Label>
               <select

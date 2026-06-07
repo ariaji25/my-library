@@ -161,6 +161,8 @@ export const en = {
     cameraPermissionHint:
       "Take photo may ask for camera access in your browser. Choose image only opens your photo library.",
     uploadHint: "JPEG, PNG, WebP, or GIF · max 5 MB",
+    coverInlineHint:
+      "JPEG, PNG, WebP, or GIF · max 2 MB (stored with the book on this host)",
     orImageUrl: "Or image URL",
     removeUploadedCover: "Remove uploaded cover",
     totalPages: "Total pages",
@@ -281,6 +283,9 @@ export const en = {
     coverEmpty: "Cover file is empty",
     coverSize: "Cover image must be 5 MB or smaller",
     coverType: "Cover must be JPEG, PNG, WebP, or GIF",
+    coverInlineTooLarge: "Cover image must be 2 MB or smaller on this host",
+    coverUploadEphemeral:
+      "File upload is not available on this host. Use an image under 2 MB or paste a cover URL.",
     searchFailed: "Could not search books right now",
     bookSearchFailed: "Book search failed",
     aiNotConfigured: "AI Librarian is not configured. Set OPENAI_API_KEY in your environment.",

@@ -41,7 +41,7 @@ Auth: no DB users — env-only admin. Session cookie signed with email+password.
 
 - **GHCR**: `.github/workflows/docker.yml` → `ghcr.io/<owner>/<repo>:latest` on `main`
 - **Compose prod**: `docker-compose.example.yml` + `.env.compose.example` (pull GHCR image + Postgres + `cover_uploads` volume)
-- **Vercel**: see `DEPLOYMENT.md`; use cover **URLs** only (no persistent uploads)
+- **Vercel**: see `DEPLOYMENT.md`; cover files stored as data URLs in DB (max 2 MB), not `public/uploads`
 - Startup migrations off by default (`scripts/startup.ts`); set `RUN_MIGRATE_ON_STARTUP=true` or run `npm run db:migrate:deploy`
 
 ## Features implemented
@@ -87,7 +87,7 @@ docker-compose.example.yml
 | DB `P1000` on port 5432 | Use `DATABASE_URL` with **5433** and `docker compose up -d postgres` |
 | No `/api/books/search` in Network tab | Wrong search box (use pink Open Library box); restart dev + hard refresh; check client hydration |
 | Search API 401 | `/api/books/search` must be in `PUBLIC_PATHS` in `middleware.ts` |
-| Covers lost on Vercel | Use URL or deploy with Docker + volume |
+| Covers lost on Vercel | Inline data URLs in DB (≤2 MB) or use external URL; disk uploads need Docker + volume |
 | `npm run test:book-search` fails HTTP | Start `npm run dev` first |
 
 ## Conventions

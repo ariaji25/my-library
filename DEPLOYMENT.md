@@ -123,7 +123,7 @@ docker compose -f docker-compose.prod.yml --env-file .env up -d
 
 Open http://localhost:3000 (or your `APP_PORT`). Postgres stays on the internal Docker network only.
 
-Uploaded book covers are stored under `public/uploads/covers/` and persisted via the `cover_uploads` Docker volume. On **Vercel**, the filesystem is ephemeral — use cover **URLs** there, or deploy with Docker/Railway for file uploads.
+Uploaded book covers are stored under `public/uploads/covers/` and persisted via the `cover_uploads` Docker volume. On **Vercel**, file uploads are stored inline in the database (data URLs, max 2 MB) — no `public/uploads` write. Use cover **URLs** for larger images, or deploy with Docker/Railway for disk uploads.
 
 **Build from source** instead of GHCR: uncomment the `build:` block under `app` in the compose file and set `APP_IMAGE=` empty, or use the repo’s [`docker-compose.yml`](./docker-compose.yml):
 

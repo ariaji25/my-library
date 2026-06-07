@@ -165,6 +165,8 @@ export const id: Messages = {
     cameraPermissionHint:
       "Ambil foto bisa minta izin kamera di browser. Pilih gambar cuma buka galeri foto.",
     uploadHint: "JPEG, PNG, WebP, atau GIF · maks. 5 MB",
+    coverInlineHint:
+      "JPEG, PNG, WebP, atau GIF · maks. 2 MB (disimpan bersama buku di host ini)",
     orImageUrl: "Atau URL gambar",
     removeUploadedCover: "Hapus sampul yang diunggah",
     totalPages: "Total halaman",
@@ -289,6 +291,9 @@ export const id: Messages = {
     coverEmpty: "File sampul kosong",
     coverSize: "Gambar sampul maksimal 5 MB",
     coverType: "Sampul harus JPEG, PNG, WebP, atau GIF",
+    coverInlineTooLarge: "Gambar sampul maksimal 2 MB di host ini",
+    coverUploadEphemeral:
+      "Unggah file tidak tersedia di host ini. Pakai gambar di bawah 2 MB atau tempel URL sampul.",
     searchFailed: "Tidak dapat mencari buku saat ini",
     bookSearchFailed: "Pencarian buku gagal",
     aiNotConfigured:
