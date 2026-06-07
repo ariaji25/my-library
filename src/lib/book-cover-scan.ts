@@ -4,6 +4,7 @@ import {
   type BookSearchHit,
 } from "@/lib/book-search";
 import {
+  buildCoverScanVisionRequest,
   CoverScanError,
   getCoverScanConfig,
 } from "@/lib/cover-scan-ai";
@@ -34,28 +35,86 @@ function normalizeYear(value: number | null | undefined): number | undefined {
   return year >= 1000 && year <= 2100 ? year : undefined;
 }
 
+const JSON_EXAMPLE =
+  '{"title":"Example Title","author":"Example Author","genre":"Fiction","year":2020,"isbn":null}';
+
 function visionPrompt(locale: Locale): string {
   if (locale === "en") {
     return `Read this book cover image. Extract visible metadata from the cover, spine, or barcode.
-Return JSON only with these keys:
-- title (string or null)
-- author (string or null)
-- genre (string or null — one short category, e.g. Fiction, Science, Biography)
-- year (number or null — publication year if visible)
-- isbn (string or null — digits only, include check digit if readable)
 
-Use null for fields you cannot determine. Do not guess plot or content not shown on the cover.`;
+Reply with ONE JSON object only — no markdown, no explanation. Use exactly these keys:
+title, author, genre, year, isbn
+
+Rules:
+- Use null for unknown fields (not the string "null")
+- genre: one short category (e.g. Fiction, Science, Biography)
+- year: number or null
+- isbn: digits only, or null
+
+Example:
+${JSON_EXAMPLE}`;
   }
 
   return `Baca gambar sampul buku ini. Ekstrak metadata yang terlihat dari sampul, punggung buku, atau barcode.
-Kembalikan JSON saja dengan kunci:
-- title (string atau null)
-- author (string atau null)
-- genre (string atau null — satu kategori singkat, mis. Fiksi, Sains, Biografi)
-- year (number atau null — tahun terbit jika terlihat)
-- isbn (string atau null — hanya digit, sertakan digit cek jika terbaca)
 
-Gunakan null untuk field yang tidak bisa ditentukan. Jangan mengarang plot atau isi yang tidak terlihat di sampul.`;
+Balas dengan SATU objek JSON saja — tanpa markdown, tanpa penjelasan. Pakai kunci persis ini:
+title, author, genre, year, isbn
+
+Aturan:
+- null untuk field yang tidak tahu (bukan string "null")
+- genre: satu kategori singkat (mis. Fiksi, Sains, Biografi)
+- year: angka atau null
+- isbn: hanya digit, atau null
+
+Contoh:
+${JSON_EXAMPLE}`;
+}
+
+function nullableText(value: unknown): string | null {
+  if (value == null) return null;
+  const text = String(value).trim();
+  if (!text || text.toLowerCase() === "null" || text === "n/a") return null;
+  return text;
+}
+
+function parseYearValue(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.round(value);
+  }
+  const parsed = Number.parseInt(String(value).replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseVisionExtraction(content: string): VisionExtraction {
+  const trimmed = content.trim();
+
+  const candidates: string[] = [trimmed];
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced?.[1]) candidates.push(fenced[1].trim());
+
+  const start = trimmed.indexOf("{");
+  const end = trimmed.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    candidates.push(trimmed.slice(start, end + 1));
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const raw = JSON.parse(candidate) as Record<string, unknown>;
+      return {
+        title: nullableText(raw.title),
+        author: nullableText(raw.author),
+        genre: nullableText(raw.genre),
+        year: parseYearValue(raw.year),
+        isbn: nullableText(raw.isbn),
+      };
+    } catch {
+      /* try next candidate */
+    }
+  }
+
+  throw new Error("invalid vision json");
 }
 
 async function extractFromCoverImage(
@@ -70,6 +129,11 @@ async function extractFromCoverImage(
   }
 
   const dataUrl = `data:${mimeType};base64,${bytes.toString("base64")}`;
+  const requestBody = buildCoverScanVisionRequest(
+    config,
+    visionPrompt(locale),
+    dataUrl
+  );
 
   const response = await fetch(`${config.baseUrl}/chat/completions`, {
     method: "POST",
@@ -77,24 +141,7 @@ async function extractFromCoverImage(
       Authorization: `Bearer ${config.apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: config.model,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: visionPrompt(locale) },
-            {
-              type: "image_url",
-              image_url: { url: dataUrl, detail: "low" },
-            },
-          ],
-        },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.1,
-      max_tokens: 400,
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   const raw = await response.text().catch(() => "");
@@ -117,7 +164,7 @@ async function extractFromCoverImage(
     if (!content) {
       throw new Error("empty");
     }
-    parsed = JSON.parse(content) as VisionExtraction;
+    parsed = parseVisionExtraction(content);
   } catch {
     throw new CoverScanError(m.errors.coverScanParseFailed, "INVALID_RESPONSE");
   }
